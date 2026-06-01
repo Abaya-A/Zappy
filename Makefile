@@ -12,7 +12,9 @@ SERVER_ROOT := zappy_server
 GUI_NAME    := zappy_gui
 GUI_DIR     := gui
 GUI_SRC     := $(GUI_DIR)/src/main.cpp \
-               $(GUI_DIR)/src/GuiArgs.cpp
+               $(GUI_DIR)/src/GuiArgs.cpp \
+               $(GUI_DIR)/src/NetworkClient.cpp
+
 GUI_OBJ     := $(GUI_SRC:.cpp=.o)
 GUI_CXX     := g++
 GUI_CXXFLAGS := -Wall -Wextra -Werror -std=c++20 -I$(GUI_DIR)/include
