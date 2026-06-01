@@ -6,9 +6,17 @@
 */
 
 mod parser;
+mod utils;
 
 fn main()
 {
-    println!("Zappy Server");
-    parser::parse_args();
+    let params = parser::parse_args();
+    println!("port = {}", params.port);
+    println!("width = {}", params.width);
+    println!("height = {}", params.height);
+    println!("clients = {}", params.port);
+    println!("frequency = {}", params.frequency);
+    for i in params.teams {
+        println!("teams = {}", i);
+    }
 }
