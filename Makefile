@@ -14,7 +14,9 @@ GUI_DIR     := gui
 GUI_SRC     := $(GUI_DIR)/src/main.cpp \
                $(GUI_DIR)/src/GuiArgs.cpp \
                $(GUI_DIR)/src/NetworkClient.cpp \
-			   $(GUI_DIR)/src/GuiClient.cpp
+			   $(GUI_DIR)/src/GuiClient.cpp  \
+			   $(GUI_DIR)/src/ProtocolParser.cpp \
+			   $(GUI_DIR)/src/ProtocolCommand.cpp \
 
 GUI_OBJ     := $(GUI_SRC:.cpp=.o)
 GUI_CXX     := g++
