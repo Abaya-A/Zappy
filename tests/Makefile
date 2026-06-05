@@ -6,7 +6,8 @@ TEST_BINS       := $(patsubst $(TEST_DIR)/gui/%.cpp,$(TEST_BUILD_DIR)/%,$(TEST_S
 
 TEST_COMMON_SRC := $(GUI_DIR)/src/ProtocolCommand.cpp \
                    $(GUI_DIR)/src/ProtocolParser.cpp \
-                   $(GUI_DIR)/src/Resource.cpp
+                   $(GUI_DIR)/src/Resource.cpp \
+				   $(GUI_DIR)/src/Tile.cpp \
 
 .PHONY: test tests_run clean_tests fclean_tests
 
