@@ -20,16 +20,13 @@ GUI_SRC         := $(GUI_DIR)/src/main.cpp \
                    $(GUI_DIR)/src/GuiClient.cpp \
                    $(GUI_DIR)/src/ProtocolParser.cpp \
                    $(GUI_DIR)/src/ProtocolCommand.cpp \
-				   $(GUI_DIR)/src/Resource.cpp \
+                   $(GUI_DIR)/src/Resource.cpp
 
 GUI_OBJ         := $(GUI_SRC:.cpp=.o)
 
-TEST_PROTOCOL_NAME := test_protocol
-TEST_PROTOCOL_SRC  := tests/gui/test_protocol.cpp \
-                      $(GUI_DIR)/src/ProtocolCommand.cpp \
-                      $(GUI_DIR)/src/ProtocolParser.cpp
+include tests/Makefile
 
-.PHONY: all server zappy_gui tests_run clean fclean re
+.PHONY: all server zappy_gui clean fclean re
 
 all: server $(SERVER_ROOT) zappy_gui
 
@@ -43,23 +40,18 @@ $(SERVER_ROOT): server
 zappy_gui: $(GUI_OBJ)
 	$(GUI_CXX) $(GUI_CXXFLAGS) -o $(GUI_NAME) $(GUI_OBJ)
 
-tests_run:
-	$(GUI_CXX) $(GUI_CXXFLAGS) -o $(TEST_PROTOCOL_NAME) $(TEST_PROTOCOL_SRC)
-	./$(TEST_PROTOCOL_NAME)
-
 %.o: %.cpp
 	$(GUI_CXX) $(GUI_CXXFLAGS) -c $< -o $@
 
-clean:
+clean: clean_tests
 	$(MAKE) -C $(SERVER_DIR) clean
 	rm -f $(SERVER_ROOT)
 	rm -f $(GUI_OBJ)
 
-fclean:
+fclean: fclean_tests
 	$(MAKE) -C $(SERVER_DIR) fclean
 	rm -f $(SERVER_ROOT)
 	rm -f $(GUI_OBJ)
 	rm -f $(GUI_NAME)
-	rm -f $(TEST_PROTOCOL_NAME)
 
 re: fclean all
