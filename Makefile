@@ -20,7 +20,8 @@ GUI_SRC         := $(GUI_DIR)/src/main.cpp \
                    $(GUI_DIR)/src/GuiClient.cpp \
                    $(GUI_DIR)/src/ProtocolParser.cpp \
                    $(GUI_DIR)/src/ProtocolCommand.cpp \
-                   $(GUI_DIR)/src/Resource.cpp
+                   $(GUI_DIR)/src/Resource.cpp \
+				   $(GUI_DIR)/src/Tile.cpp \
 
 GUI_OBJ         := $(GUI_SRC:.cpp=.o)
 
