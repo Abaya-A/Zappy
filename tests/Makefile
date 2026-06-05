@@ -10,6 +10,7 @@ TEST_COMMON_SRC := $(GUI_DIR)/src/ProtocolCommand.cpp \
 				   $(GUI_DIR)/src/Tile.cpp \
 				   $(GUI_DIR)/src/Egg.cpp \
 				   $(GUI_DIR)/src/Player.cpp \
+				   $(GUI_DIR)/src/GameState.cpp \
 
 .PHONY: test tests_run clean_tests fclean_tests
 
