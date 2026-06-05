@@ -22,6 +22,7 @@ GUI_SRC         := $(GUI_DIR)/src/main.cpp \
                    $(GUI_DIR)/src/ProtocolCommand.cpp \
                    $(GUI_DIR)/src/Resource.cpp \
 				   $(GUI_DIR)/src/Tile.cpp \
+				   $(GUI_DIR)/src/Egg.cpp \
 
 GUI_OBJ         := $(GUI_SRC:.cpp=.o)
 
