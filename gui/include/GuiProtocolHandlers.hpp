@@ -24,6 +24,12 @@ private:
     void handleServerMessage(const ProtocolCommand &command);
     void handleEndGame(const ProtocolCommand &command);
 
+    void handlePlayerNew(const ProtocolCommand &command);
+    void handlePlayerPosition(const ProtocolCommand &command);
+    void handlePlayerLevel(const ProtocolCommand &command);
+    void handlePlayerInventory(const ProtocolCommand &command);
+    void handlePlayerDeath(const ProtocolCommand &command);
+
     GameState &_state;
     std::unordered_map<std::string, Handler> _handlers;
 };
