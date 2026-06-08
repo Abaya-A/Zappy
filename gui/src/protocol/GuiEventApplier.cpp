@@ -1,9 +1,9 @@
-#include "GuiEventApplier.hpp"
+#include "protocol/GuiEventApplier.hpp"
 
-#include "Player.hpp"
-#include "Tile.hpp"
-#include "Egg.hpp"
-#include "Resource.hpp"
+#include "state/Player.hpp"
+#include "state/Tile.hpp"
+#include "state/Egg.hpp"
+#include "state/Resource.hpp"
 
 #include <iostream>
 #include <variant>

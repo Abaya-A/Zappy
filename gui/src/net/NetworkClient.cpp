@@ -1,4 +1,4 @@
-#include "NetworkClient.hpp"
+#include "net/NetworkClient.hpp"
 
 #include <cerrno>
 #include <cstring>

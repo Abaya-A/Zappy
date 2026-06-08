@@ -1,6 +1,6 @@
-#include "GuiProtocolDecoder.hpp"
+#include "protocol/GuiProtocolDecoder.hpp"
 
-#include "Resource.hpp"
+#include "state/Resource.hpp"
 
 #include <sstream>
 #include <vector>

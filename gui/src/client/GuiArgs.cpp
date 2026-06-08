@@ -1,4 +1,4 @@
-#include "GuiArgs.hpp"
+#include "client/GuiArgs.hpp"
 
 #include <cstdlib>
 #include <iostream>

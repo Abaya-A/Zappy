@@ -1,4 +1,4 @@
-#include "ProtocolCommand.hpp"
+#include "protocol/ProtocolCommand.hpp"
 
 #include <charconv>
 #include <utility>

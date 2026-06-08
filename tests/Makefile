@@ -4,15 +4,15 @@ TEST_BUILD_DIR  := build/tests
 TEST_SRC        := $(wildcard $(TEST_DIR)/gui/test_*.cpp)
 TEST_BINS       := $(patsubst $(TEST_DIR)/gui/%.cpp,$(TEST_BUILD_DIR)/%,$(TEST_SRC))
 
-TEST_COMMON_SRC := $(GUI_DIR)/src/ProtocolCommand.cpp \
-                   $(GUI_DIR)/src/ProtocolParser.cpp \
-                   $(GUI_DIR)/src/Resource.cpp \
-				   $(GUI_DIR)/src/Tile.cpp \
-				   $(GUI_DIR)/src/Egg.cpp \
-				   $(GUI_DIR)/src/Player.cpp \
-				   $(GUI_DIR)/src/GameState.cpp \
-				   $(GUI_DIR)/src/GuiProtocolDecoder.cpp  \
-				   $(GUI_DIR)/src/GuiEventApplier.cpp  \
+TEST_COMMON_SRC := $(GUI_DIR)/src/protocol/ProtocolCommand.cpp \
+                   $(GUI_DIR)/src/protocol/ProtocolParser.cpp \
+                   $(GUI_DIR)/src/state/Resource.cpp \
+				   $(GUI_DIR)/src/state/Tile.cpp \
+				   $(GUI_DIR)/src/state/Egg.cpp \
+				   $(GUI_DIR)/src/state/Player.cpp \
+				   $(GUI_DIR)/src/state/GameState.cpp \
+				   $(GUI_DIR)/src/protocol/GuiProtocolDecoder.cpp  \
+				   $(GUI_DIR)/src/protocol/GuiEventApplier.cpp  \
 
 .PHONY: test tests_run clean_tests fclean_tests
 

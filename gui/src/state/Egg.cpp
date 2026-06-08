@@ -1,4 +1,4 @@
-#include "Egg.hpp"
+#include "state/Egg.hpp"
 
 Egg::Egg(int id, int playerId, int x, int y)
     : _id(isValidId(id) ? id : 0),

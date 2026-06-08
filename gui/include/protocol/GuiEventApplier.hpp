@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GameState.hpp"
+#include "state/GameState.hpp"
 #include "GuiProtocolEvent.hpp"
 
 class GuiEventApplier {

@@ -1,5 +1,5 @@
-#include "GuiArgs.hpp"
-#include "GuiClient.hpp"
+#include "client/GuiArgs.hpp"
+#include "client/GuiClient.hpp"
 
 #include <iostream>
 #include <stdexcept>

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Player.hpp"
-#include "Tile.hpp"
+#include "state/Player.hpp"
+#include "state/Tile.hpp"
 
 #include <string>
 #include <variant>

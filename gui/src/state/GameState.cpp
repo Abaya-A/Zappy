@@ -1,4 +1,4 @@
-#include "GameState.hpp"
+#include "state/GameState.hpp"
 
 #include <algorithm>
 

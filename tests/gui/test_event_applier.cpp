@@ -1,6 +1,6 @@
-#include "GuiEventApplier.hpp"
-#include "GuiProtocolEvent.hpp"
-#include "GameState.hpp"
+#include "protocol/GuiEventApplier.hpp"
+#include "protocol/GuiProtocolEvent.hpp"
+#include "state/GameState.hpp"
 
 #include <iostream>
 

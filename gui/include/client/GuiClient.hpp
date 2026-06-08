@@ -1,10 +1,10 @@
 #pragma once
 
-#include "GameState.hpp"
-#include "NetworkClient.hpp"
-#include "ProtocolParser.hpp"
-#include "GuiEventApplier.hpp"
-#include "GuiProtocolDecoder.hpp"
+#include "state/GameState.hpp"
+#include "net/NetworkClient.hpp"
+#include "protocol/ProtocolParser.hpp"
+#include "protocol/GuiEventApplier.hpp"
+#include "protocol/GuiProtocolDecoder.hpp"
 
 #include <string>
 

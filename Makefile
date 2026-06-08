@@ -15,18 +15,18 @@ GUI_CXX         := g++
 GUI_CXXFLAGS    := -Wall -Wextra -Werror -std=c++20 -I$(GUI_DIR)/include
 
 GUI_SRC         := $(GUI_DIR)/src/main.cpp \
-                   $(GUI_DIR)/src/GuiArgs.cpp \
-                   $(GUI_DIR)/src/NetworkClient.cpp \
-                   $(GUI_DIR)/src/GuiClient.cpp \
-                   $(GUI_DIR)/src/ProtocolParser.cpp \
-                   $(GUI_DIR)/src/ProtocolCommand.cpp \
-                   $(GUI_DIR)/src/Resource.cpp \
-                   $(GUI_DIR)/src/Tile.cpp \
-                   $(GUI_DIR)/src/Egg.cpp \
-				   $(GUI_DIR)/src/Player.cpp \
-				   $(GUI_DIR)/src/GameState.cpp \
-				   $(GUI_DIR)/src/GuiProtocolDecoder.cpp  \
-				   $(GUI_DIR)/src/GuiEventApplier.cpp  \
+                   $(GUI_DIR)/src/client/GuiArgs.cpp \
+                   $(GUI_DIR)/src/client/GuiClient.cpp \
+                   $(GUI_DIR)/src/net/NetworkClient.cpp \
+                   $(GUI_DIR)/src/protocol/ProtocolParser.cpp \
+                   $(GUI_DIR)/src/protocol/ProtocolCommand.cpp \
+                   $(GUI_DIR)/src/protocol/GuiProtocolDecoder.cpp \
+                   $(GUI_DIR)/src/protocol/GuiEventApplier.cpp \
+                   $(GUI_DIR)/src/state/Resource.cpp \
+                   $(GUI_DIR)/src/state/Tile.cpp \
+                   $(GUI_DIR)/src/state/Egg.cpp \
+                   $(GUI_DIR)/src/state/Player.cpp \
+                   $(GUI_DIR)/src/state/GameState.cpp
 
 GUI_OBJ         := $(GUI_SRC:.cpp=.o)
 

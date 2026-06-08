@@ -1,4 +1,4 @@
-#include "GuiClient.hpp"
+#include "client/GuiClient.hpp"
 
 #include <chrono>
 #include <iostream>

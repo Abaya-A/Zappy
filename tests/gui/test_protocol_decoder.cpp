@@ -1,6 +1,6 @@
-#include "GuiProtocolDecoder.hpp"
-#include "ProtocolCommand.hpp"
-#include "GuiProtocolEvent.hpp"
+#include "protocol/GuiProtocolDecoder.hpp"
+#include "protocol/ProtocolCommand.hpp"
+#include "protocol/GuiProtocolEvent.hpp"
 
 #include <iostream>
 #include <variant>
