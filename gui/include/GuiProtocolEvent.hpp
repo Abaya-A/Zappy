@@ -117,6 +117,12 @@ struct IncantationEndEvent {
     int result;
 };
 
+struct UnknownCommandEvent {
+};
+
+struct BadParameterEvent {
+};
+
 using GuiProtocolEvent = std::variant<
     MapSizeEvent,
     TileContentEvent,
@@ -138,5 +144,7 @@ using GuiProtocolEvent = std::variant<
     PlayerExpulsionEvent,
     PlayerBroadcastEvent,
     IncantationStartEvent,
-    IncantationEndEvent
+    IncantationEndEvent,
+    UnknownCommandEvent,
+    BadParameterEvent
 >;

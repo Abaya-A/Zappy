@@ -254,3 +254,17 @@ bool GuiEventApplier::applyEvent(const IncantationEndEvent &event)
               << std::endl;
     return true;
 }
+
+bool GuiEventApplier::applyEvent(const UnknownCommandEvent &event)
+{
+    (void)event;
+    std::cout << "event: server reported unknown command" << std::endl;
+    return true;
+}
+
+bool GuiEventApplier::applyEvent(const BadParameterEvent &event)
+{
+    (void)event;
+    std::cout << "event: server reported bad command parameter" << std::endl;
+    return true;
+}

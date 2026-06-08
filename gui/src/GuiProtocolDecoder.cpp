@@ -39,6 +39,10 @@ void GuiProtocolDecoder::registerDecoders()
 
     _decoders["pic"] = &GuiProtocolDecoder::decodeIncantationStart;
     _decoders["pie"] = &GuiProtocolDecoder::decodeIncantationEnd;
+
+    _decoders["sst"] = &GuiProtocolDecoder::decodeTimeUnit;
+    _decoders["suc"] = &GuiProtocolDecoder::decodeUnknownCommand;
+    _decoders["sbp"] = &GuiProtocolDecoder::decodeBadParameter;
 }
 
 std::optional<GuiProtocolEvent> GuiProtocolDecoder::decode(const ProtocolCommand &command) const
@@ -403,4 +407,20 @@ std::optional<GuiProtocolEvent> GuiProtocolDecoder::decodeIncantationEnd(const P
         return std::nullopt;
 
     return IncantationEndEvent{*x, *y, *result};
+}
+
+std::optional<GuiProtocolEvent> GuiProtocolDecoder::decodeUnknownCommand(const ProtocolCommand &command) const
+{
+    if (!command.hasArgCount(0))
+        return std::nullopt;
+
+    return UnknownCommandEvent{};
+}
+
+std::optional<GuiProtocolEvent> GuiProtocolDecoder::decodeBadParameter(const ProtocolCommand &command) const
+{
+    if (!command.hasArgCount(0))
+        return std::nullopt;
+
+    return BadParameterEvent{};
 }

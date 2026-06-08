@@ -47,6 +47,9 @@ private:
     std::optional<GuiProtocolEvent> decodeIncantationStart(const ProtocolCommand &command) const;
     std::optional<GuiProtocolEvent> decodeIncantationEnd(const ProtocolCommand &command) const;
 
+    std::optional<GuiProtocolEvent> decodeUnknownCommand(const ProtocolCommand &command) const;
+    std::optional<GuiProtocolEvent> decodeBadParameter(const ProtocolCommand &command) const;
+
     std::optional<Tile::ResourceArray> parseTileResources(
         const ProtocolCommand &command,
         std::size_t startIndex

@@ -37,5 +37,8 @@ private:
     bool applyEvent(const IncantationStartEvent &event);
     bool applyEvent(const IncantationEndEvent &event);
 
+    bool applyEvent(const UnknownCommandEvent &event);
+    bool applyEvent(const BadParameterEvent &event);
+
     GameState &_state;
 };
