@@ -10,6 +10,7 @@
 #include <Magnum/Math/Matrix3.h>
 
 #include <array>
+#include <cstddef>
 #include <vector>
 
 namespace {
@@ -17,6 +18,24 @@ namespace {
 struct Vertex {
     Magnum::Vector2 position;
 };
+
+constexpr int ResourceCount = 7;
+
+struct ResourceMarkerStyle {
+    Magnum::Color4 color;
+    float offsetX;
+    float offsetY;
+};
+
+const std::array<ResourceMarkerStyle, ResourceCount> ResourceMarkerStyles = {{
+    {Magnum::Color4{0.35f, 0.95f, 0.35f, 1.0f}, 0.18f, 0.18f}, // food
+    {Magnum::Color4{0.40f, 0.75f, 1.00f, 1.0f}, 0.42f, 0.18f}, // linemate
+    {Magnum::Color4{0.85f, 0.65f, 1.00f, 1.0f}, 0.66f, 0.18f}, // deraumere
+    {Magnum::Color4{1.00f, 0.85f, 0.35f, 1.0f}, 0.18f, 0.42f}, // sibur
+    {Magnum::Color4{1.00f, 0.55f, 0.35f, 1.0f}, 0.42f, 0.42f}, // mendiane
+    {Magnum::Color4{0.95f, 0.35f, 0.75f, 1.0f}, 0.66f, 0.42f}, // phiras
+    {Magnum::Color4{0.90f, 0.90f, 0.95f, 1.0f}, 0.42f, 0.66f}, // thystame
+}};
 
 std::vector<Vertex> buildGridVertices(int width, int height)
 {
@@ -40,24 +59,6 @@ std::vector<Vertex> buildGridVertices(int width, int height)
 
     return vertices;
 }
-
-constexpr int ResourceCount = 7;
-
-struct ResourceMarkerStyle {
-    Magnum::Color4 color;
-    float offsetX;
-    float offsetY;
-};
-
-const std::array<ResourceMarkerStyle, ResourceCount> ResourceMarkerStyles = {{
-    {Magnum::Color4{0.35f, 0.95f, 0.35f, 1.0f}, 0.18f, 0.18f}, // food
-    {Magnum::Color4{0.40f, 0.75f, 1.00f, 1.0f}, 0.42f, 0.18f}, // linemate
-    {Magnum::Color4{0.85f, 0.65f, 1.00f, 1.0f}, 0.66f, 0.18f}, // deraumere
-    {Magnum::Color4{1.00f, 0.85f, 0.35f, 1.0f}, 0.18f, 0.42f}, // sibur
-    {Magnum::Color4{1.00f, 0.55f, 0.35f, 1.0f}, 0.42f, 0.42f}, // mendiane
-    {Magnum::Color4{0.95f, 0.35f, 0.75f, 1.0f}, 0.66f, 0.42f}, // phiras
-    {Magnum::Color4{0.90f, 0.90f, 0.95f, 1.0f}, 0.42f, 0.66f}, // thystame
-}};
 
 void appendSquareMarker(
     std::vector<Vertex> &vertices,
@@ -116,44 +117,6 @@ std::array<std::vector<Vertex>, ResourceCount> buildResourceVertices(const GameS
     return verticesByResource;
 }
 
-Magnum::Matrix3 buildMapProjection(int width, int height)
-{
-    const float mapWidth = static_cast<float>(width);
-    const float mapHeight = static_cast<float>(height);
-
-    return Magnum::Matrix3::projection({mapWidth, mapHeight}) *
-           Magnum::Matrix3::translation({-mapWidth / 2.0f, -mapHeight / 2.0f});
-}
-
-void uploadVertices(Magnum::GL::Buffer &buffer, const std::vector<Vertex> &vertices)
-{
-    buffer.setData(
-        Corrade::Containers::arrayCast<const char>(
-            Corrade::Containers::arrayView(vertices.data(), vertices.size())
-        )
-    );
-}
-
-Magnum::GL::Mesh buildMesh(
-    Magnum::GL::MeshPrimitive primitive,
-    const std::vector<Vertex> &vertices
-)
-{
-    Magnum::GL::Buffer vertexBuffer;
-    uploadVertices(vertexBuffer, vertices);
-
-    Magnum::GL::Mesh mesh;
-    mesh.setPrimitive(primitive)
-        .setCount(static_cast<int>(vertices.size()))
-        .addVertexBuffer(
-            std::move(vertexBuffer),
-            0,
-            Magnum::Shaders::FlatGL2D::Position{}
-        );
-
-    return mesh;
-}
-
 void appendPlayerTriangle(
     std::vector<Vertex> &vertices,
     int x,
@@ -203,6 +166,7 @@ std::vector<Vertex> buildPlayerVertices(const GameState &state)
 
     for (const auto &[id, player] : state.players()) {
         (void)id;
+
         appendPlayerTriangle(
             vertices,
             player.x(),
@@ -245,6 +209,35 @@ std::vector<Vertex> buildEggVertices(const GameState &state)
     }
 
     return vertices;
+}
+
+void uploadVertices(Magnum::GL::Buffer &buffer, const std::vector<Vertex> &vertices)
+{
+    buffer.setData(
+        Corrade::Containers::arrayCast<const char>(
+            Corrade::Containers::arrayView(vertices.data(), vertices.size())
+        )
+    );
+}
+
+Magnum::GL::Mesh buildMesh(
+    Magnum::GL::MeshPrimitive primitive,
+    const std::vector<Vertex> &vertices
+)
+{
+    Magnum::GL::Buffer vertexBuffer;
+    uploadVertices(vertexBuffer, vertices);
+
+    Magnum::GL::Mesh mesh;
+    mesh.setPrimitive(primitive)
+        .setCount(static_cast<int>(vertices.size()))
+        .addVertexBuffer(
+            std::move(vertexBuffer),
+            0,
+            Magnum::Shaders::FlatGL2D::Position{}
+        );
+
+    return mesh;
 }
 
 } // namespace
@@ -293,6 +286,43 @@ void MagnumRenderer::drawEvent()
     swapBuffers();
 }
 
+void MagnumRenderer::viewportEvent(ViewportEvent &event)
+{
+    Magnum::GL::defaultFramebuffer.setViewport({{}, event.framebufferSize()});
+}
+
+Magnum::Matrix3 MagnumRenderer::buildCameraProjection(int width, int height) const
+{
+    const float mapWidth = static_cast<float>(width);
+    const float mapHeight = static_cast<float>(height);
+
+    if (mapWidth <= 0.0f || mapHeight <= 0.0f)
+        return Magnum::Matrix3::projection({1.0f, 1.0f});
+
+    const Magnum::Vector2i framebuffer = framebufferSize();
+
+    if (framebuffer.x() <= 0 || framebuffer.y() <= 0)
+        return Magnum::Matrix3::projection({mapWidth, mapHeight});
+
+    const float framebufferAspect =
+        static_cast<float>(framebuffer.x()) / static_cast<float>(framebuffer.y());
+    const float mapAspect = mapWidth / mapHeight;
+
+    float viewWidth = mapWidth;
+    float viewHeight = mapHeight;
+
+    if (framebufferAspect > mapAspect) {
+        viewHeight = mapHeight;
+        viewWidth = mapHeight * framebufferAspect;
+    } else {
+        viewWidth = mapWidth;
+        viewHeight = mapWidth / framebufferAspect;
+    }
+
+    return Magnum::Matrix3::projection({viewWidth, viewHeight}) *
+           Magnum::Matrix3::translation({-mapWidth / 2.0f, -mapHeight / 2.0f});
+}
+
 void MagnumRenderer::drawMapGrid(const GameState &state)
 {
     const int width = state.width();
@@ -306,7 +336,7 @@ void MagnumRenderer::drawMapGrid(const GameState &state)
 
     _shader
         .setColor(Magnum::Color4{0.75f, 0.75f, 0.85f, 1.0f})
-        .setTransformationProjectionMatrix(buildMapProjection(width, height))
+        .setTransformationProjectionMatrix(buildCameraProjection(width, height))
         .draw(mesh);
 }
 
@@ -331,30 +361,9 @@ void MagnumRenderer::drawTileResources(const GameState &state)
 
         _shader
             .setColor(ResourceMarkerStyles[resourceId].color)
-            .setTransformationProjectionMatrix(buildMapProjection(width, height))
+            .setTransformationProjectionMatrix(buildCameraProjection(width, height))
             .draw(mesh);
     }
-}
-
-void MagnumRenderer::drawPlayers(const GameState &state)
-{
-    const int width = state.width();
-    const int height = state.height();
-
-    if (width <= 0 || height <= 0)
-        return;
-
-    const std::vector<Vertex> vertices = buildPlayerVertices(state);
-
-    if (vertices.empty())
-        return;
-
-    Magnum::GL::Mesh mesh = buildMesh(Magnum::GL::MeshPrimitive::Triangles, vertices);
-
-    _shader
-        .setColor(Magnum::Color4{0.20f, 0.45f, 1.00f, 1.0f})
-        .setTransformationProjectionMatrix(buildMapProjection(width, height))
-        .draw(mesh);
 }
 
 void MagnumRenderer::drawEggs(const GameState &state)
@@ -374,6 +383,27 @@ void MagnumRenderer::drawEggs(const GameState &state)
 
     _shader
         .setColor(Magnum::Color4{1.0f, 1.0f, 0.85f, 1.0f})
-        .setTransformationProjectionMatrix(buildMapProjection(width, height))
+        .setTransformationProjectionMatrix(buildCameraProjection(width, height))
+        .draw(mesh);
+}
+
+void MagnumRenderer::drawPlayers(const GameState &state)
+{
+    const int width = state.width();
+    const int height = state.height();
+
+    if (width <= 0 || height <= 0)
+        return;
+
+    const std::vector<Vertex> vertices = buildPlayerVertices(state);
+
+    if (vertices.empty())
+        return;
+
+    Magnum::GL::Mesh mesh = buildMesh(Magnum::GL::MeshPrimitive::Triangles, vertices);
+
+    _shader
+        .setColor(Magnum::Color4{0.20f, 0.45f, 1.00f, 1.0f})
+        .setTransformationProjectionMatrix(buildCameraProjection(width, height))
         .draw(mesh);
 }

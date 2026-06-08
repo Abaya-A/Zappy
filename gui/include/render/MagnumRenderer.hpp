@@ -5,6 +5,7 @@
 #include <Magnum/GL/Mesh.h>
 #include <Magnum/Platform/Sdl2Application.h>
 #include <Magnum/Shaders/FlatGL.h>
+#include <Magnum/Math/Matrix3.h>
 
 class MagnumRenderer : public Magnum::Platform::Sdl2Application {
 public:
@@ -20,6 +21,8 @@ private:
     void drawTileResources(const GameState &state);
     void drawPlayers(const GameState &state);
     void drawEggs(const GameState &state);
+    void viewportEvent(ViewportEvent &event) override;
+    Magnum::Matrix3 buildCameraProjection(int width, int height) const;
 
     const GameState *_state;
     bool _isOpen;
