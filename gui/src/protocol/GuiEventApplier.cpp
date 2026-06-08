@@ -226,7 +226,8 @@ bool GuiEventApplier::applyEvent(const PlayerBroadcastEvent &event)
     std::cout << "event: player #" << event.playerId
               << " broadcast: " << event.message
               << std::endl;
-    return true;
+
+    return _state.addBroadcast(event.playerId, event.message);
 }
 
 bool GuiEventApplier::applyEvent(const IncantationStartEvent &event)

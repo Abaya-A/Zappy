@@ -41,7 +41,7 @@ std::vector<zappy::render::Vertex> buildIncantationVertices(const GameState &sta
     std::vector<zappy::render::Vertex> vertices;
 
     for (const Incantation &incantation : state.incantations())
-        appendIncantationOutline(vertices, incantation.x, incantation.y);
+        appendIncantationOutline(vertices, incantation.x(), incantation.y());
 
     return vertices;
 }

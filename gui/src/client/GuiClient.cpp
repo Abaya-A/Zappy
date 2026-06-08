@@ -33,6 +33,8 @@ void GuiClient::run()
         for (const std::string &line : lines)
             handleLine(line);
 
+        _state.updateVisualEffects();
+
         _renderer.handleEvents();
         _renderer.render(_state);
 
