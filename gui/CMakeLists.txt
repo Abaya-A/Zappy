@@ -33,6 +33,13 @@ set(ZAPPY_GUI_SOURCES
     src/state/GameState.cpp
 
     src/render/MagnumRenderer.cpp
+    src/render/RenderCamera.cpp
+    src/render/RenderGeometry.cpp
+    src/render/RenderMeshFactory.cpp
+    src/render/MapRenderer.cpp
+    src/render/ResourceRenderer.cpp
+    src/render/EggRenderer.cpp
+    src/render/PlayerRenderer.cpp
 )
 
 add_executable(zappy_gui
