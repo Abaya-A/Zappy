@@ -6,6 +6,7 @@
 #include "render/RenderCamera.hpp"
 #include "render/ResourceRenderer.hpp"
 #include "state/GameState.hpp"
+#include "render/IncantationRenderer.hpp"
 
 #include <Magnum/Platform/Sdl2Application.h>
 #include <Magnum/Shaders/FlatGL.h>
@@ -30,6 +31,7 @@ private:
     zappy::render::RenderCamera _camera;
     zappy::render::MapRenderer _mapRenderer;
     zappy::render::ResourceRenderer _resourceRenderer;
+    zappy::render::IncantationRenderer _incantationRenderer;
     zappy::render::EggRenderer _eggRenderer;
     zappy::render::PlayerRenderer _playerRenderer;
 };

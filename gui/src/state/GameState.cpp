@@ -10,7 +10,8 @@ GameState::GameState()
       _tiles(),
       _teams(),
       _players(),
-      _eggs()
+      _eggs(),
+      _incantations()
 {
 }
 
@@ -198,4 +199,40 @@ bool GameState::isReady() const
 const std::vector<Tile> &GameState::tiles() const
 {
     return _tiles;
+}
+
+bool GameState::startIncantation(
+    int x,
+    int y,
+    int level,
+    const std::vector<int> &playerIds
+)
+{
+    if (tileAt(x, y) == nullptr)
+        return false;
+
+    _incantations.push_back({x, y, level, playerIds});
+    return true;
+}
+
+bool GameState::endIncantation(int x, int y)
+{
+    auto it = std::remove_if(
+        _incantations.begin(),
+        _incantations.end(),
+        [x, y](const Incantation &incantation) {
+            return incantation.x == x && incantation.y == y;
+        }
+    );
+
+    if (it == _incantations.end())
+        return false;
+
+    _incantations.erase(it, _incantations.end());
+    return true;
+}
+
+const std::vector<Incantation> &GameState::incantations() const
+{
+    return _incantations;
 }

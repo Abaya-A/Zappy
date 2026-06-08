@@ -40,6 +40,7 @@ set(ZAPPY_GUI_SOURCES
     src/render/ResourceRenderer.cpp
     src/render/EggRenderer.cpp
     src/render/PlayerRenderer.cpp
+    src/render/IncantationRenderer.cpp
 )
 
 add_executable(zappy_gui

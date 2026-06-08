@@ -10,6 +10,13 @@
 #include <unordered_map>
 #include <vector>
 
+struct Incantation {
+    int x;
+    int y;
+    int level;
+    std::vector<int> playerIds;
+};
+
 class GameState {
 public:
     GameState();
@@ -46,6 +53,10 @@ public:
     const std::unordered_map<int, Player> &players() const;
     const std::unordered_map<int, Egg> &eggs() const;
 
+    bool startIncantation(int x, int y, int level, const std::vector<int> &playerIds);
+    bool endIncantation(int x, int y);
+    const std::vector<Incantation> &incantations() const;
+
 private:
     int _width;
     int _height;
@@ -56,6 +67,7 @@ private:
     std::vector<std::string> _teams;
     std::unordered_map<int, Player> _players;
     std::unordered_map<int, Egg> _eggs;
+    std::vector<Incantation> _incantations;
 
     bool isValidSize(int width, int height) const;
     bool isValidPosition(int x, int y) const;

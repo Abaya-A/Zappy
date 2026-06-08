@@ -243,7 +243,13 @@ bool GuiEventApplier::applyEvent(const IncantationStartEvent &event)
     }
 
     std::cout << std::endl;
-    return true;
+
+    return _state.startIncantation(
+        event.x,
+        event.y,
+        event.level,
+        event.playerIds
+    );
 }
 
 bool GuiEventApplier::applyEvent(const IncantationEndEvent &event)
@@ -252,7 +258,8 @@ bool GuiEventApplier::applyEvent(const IncantationEndEvent &event)
               << event.x << "," << event.y
               << " result=" << event.result
               << std::endl;
-    return true;
+
+    return _state.endIncantation(event.x, event.y);
 }
 
 bool GuiEventApplier::applyEvent(const UnknownCommandEvent &event)
