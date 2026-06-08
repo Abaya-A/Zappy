@@ -48,13 +48,15 @@ def entity_messages():
         "pin #1 2 3 10 1 0 0 0 0 0\n",
     ]
 
-
 def scenario_messages():
     return [
-        # Move player #1, then level him up
+        # Move player #1, then broadcast and level up
         "ppo #1 3 3 2\n",
         "pbc #1 watch me level up\n",
         "plv #1 5\n",
+
+        # Player #2 also broadcasts before dying
+        "pbc #2 broadcast before death\n",
 
         # Incantation appears, then disappears
         "pic 3 3 2 #1 #2\n",
@@ -66,13 +68,15 @@ def scenario_messages():
         # Player #2 disappears
         "pdi #2\n",
 
+        # Player #1 broadcasts again after other events
         "pbc #1 hello from mock server\n",
     ]
-
 
 def message_delay(message):
     if message.startswith("pic "):
         return 2.0
+    if message.startswith("pbc "):
+        return 1.0
     if message.startswith("plv "):
         return 1.0
     if message.startswith("pie "):

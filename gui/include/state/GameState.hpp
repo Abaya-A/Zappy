@@ -3,19 +3,14 @@
 #include "Egg.hpp"
 #include "Player.hpp"
 #include "Tile.hpp"
+#include "Broadcast.hpp"
+#include "Incantation.hpp"
 
 #include <cstddef>
 #include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
-
-struct Incantation {
-    int x;
-    int y;
-    int level;
-    std::vector<int> playerIds;
-};
 
 class GameState {
 public:
@@ -57,6 +52,11 @@ public:
     bool endIncantation(int x, int y);
     const std::vector<Incantation> &incantations() const;
 
+    bool addBroadcast(int playerId, const std::string &message);
+    const std::vector<Broadcast> &broadcasts() const;
+    void clearBroadcasts();
+    void updateVisualEffects();
+
 private:
     int _width;
     int _height;
@@ -68,6 +68,7 @@ private:
     std::unordered_map<int, Player> _players;
     std::unordered_map<int, Egg> _eggs;
     std::vector<Incantation> _incantations;
+    std::vector<Broadcast> _broadcasts;
 
     bool isValidSize(int width, int height) const;
     bool isValidPosition(int x, int y) const;

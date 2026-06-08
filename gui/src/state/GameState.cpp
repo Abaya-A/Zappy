@@ -11,7 +11,8 @@ GameState::GameState()
       _teams(),
       _players(),
       _eggs(),
-      _incantations()
+      _incantations(),
+      _broadcasts()
 {
 }
 
@@ -103,7 +104,23 @@ bool GameState::updatePlayerInventory(int id, int x, int y, const Player::Invent
 
 bool GameState::removePlayer(int id)
 {
-    return _players.erase(id) > 0;
+    const bool removed = _players.erase(id) > 0;
+
+    if (!removed)
+        return false;
+
+    _broadcasts.erase(
+        std::remove_if(
+            _broadcasts.begin(),
+            _broadcasts.end(),
+            [id](const Broadcast &broadcast) {
+                return broadcast.belongsToPlayer(id);
+            }
+        ),
+        _broadcasts.end()
+    );
+
+    return true;
 }
 
 bool GameState::addEgg(const Egg &egg)
@@ -211,7 +228,7 @@ bool GameState::startIncantation(
     if (tileAt(x, y) == nullptr)
         return false;
 
-    _incantations.push_back({x, y, level, playerIds});
+    _incantations.emplace_back(x, y, level, playerIds);
     return true;
 }
 
@@ -221,7 +238,7 @@ bool GameState::endIncantation(int x, int y)
         _incantations.begin(),
         _incantations.end(),
         [x, y](const Incantation &incantation) {
-            return incantation.x == x && incantation.y == y;
+            return incantation.isAt(x, y);
         }
     );
 
@@ -235,4 +252,61 @@ bool GameState::endIncantation(int x, int y)
 const std::vector<Incantation> &GameState::incantations() const
 {
     return _incantations;
+}
+
+bool GameState::addBroadcast(int playerId, const std::string &message)
+{
+    auto it = _players.find(playerId);
+
+    if (it == _players.end())
+        return false;
+
+    _broadcasts.erase(
+        std::remove_if(
+            _broadcasts.begin(),
+            _broadcasts.end(),
+            [playerId](const Broadcast &broadcast) {
+                return broadcast.belongsToPlayer(playerId);
+            }
+        ),
+        _broadcasts.end()
+    );
+
+    const Player &player = it->second;
+
+    _broadcasts.emplace_back(
+        playerId,
+        player.x(),
+        player.y(),
+        message
+    );
+
+    return true;
+}
+
+const std::vector<Broadcast> &GameState::broadcasts() const
+{
+    return _broadcasts;
+}
+
+void GameState::clearBroadcasts()
+{
+    _broadcasts.clear();
+}
+
+void GameState::updateVisualEffects()
+{
+    for (Broadcast &broadcast : _broadcasts)
+        broadcast.tick();
+
+    _broadcasts.erase(
+        std::remove_if(
+            _broadcasts.begin(),
+            _broadcasts.end(),
+            [](const Broadcast &broadcast) {
+                return broadcast.isExpired();
+            }
+        ),
+        _broadcasts.end()
+    );
 }

@@ -30,6 +30,8 @@ set(ZAPPY_GUI_SOURCES
     src/state/Tile.cpp
     src/state/Egg.cpp
     src/state/Player.cpp
+    src/state/Incantation.cpp
+    src/state/Broadcast.cpp
     src/state/GameState.cpp
 
     src/render/MagnumRenderer.cpp
@@ -41,6 +43,7 @@ set(ZAPPY_GUI_SOURCES
     src/render/EggRenderer.cpp
     src/render/PlayerRenderer.cpp
     src/render/IncantationRenderer.cpp
+    src/render/BroadcastRenderer.cpp
 )
 
 add_executable(zappy_gui
