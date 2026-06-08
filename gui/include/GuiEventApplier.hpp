@@ -28,5 +28,8 @@ private:
     bool applyEvent(const EggDeathEvent &event);
     bool applyEvent(const PlayerForkEvent &event);
 
+    bool applyEvent(const PlayerDropResourceEvent &event);
+    bool applyEvent(const PlayerCollectResourceEvent &event);
+
     GameState &_state;
 };

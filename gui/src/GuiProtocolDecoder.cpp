@@ -29,6 +29,9 @@ void GuiProtocolDecoder::registerDecoders()
     _decoders["ebo"] = &GuiProtocolDecoder::decodeEggHatch;
     _decoders["edi"] = &GuiProtocolDecoder::decodeEggDeath;
     _decoders["pfk"] = &GuiProtocolDecoder::decodePlayerFork;
+
+    _decoders["pdr"] = &GuiProtocolDecoder::decodePlayerDropResource;
+    _decoders["pgt"] = &GuiProtocolDecoder::decodePlayerCollectResource;
 }
 
 std::optional<GuiProtocolEvent> GuiProtocolDecoder::decode(const ProtocolCommand &command) const
@@ -290,4 +293,32 @@ std::optional<GuiProtocolEvent> GuiProtocolDecoder::decodePlayerFork(const Proto
         return std::nullopt;
 
     return PlayerForkEvent{*playerId};
+}
+
+std::optional<GuiProtocolEvent> GuiProtocolDecoder::decodePlayerDropResource(const ProtocolCommand &command) const
+{
+    if (!command.hasArgCount(2))
+        return std::nullopt;
+
+    const auto playerId = command.idArg(0);
+    const auto resourceId = command.intArg(1);
+
+    if (!playerId || !resourceId)
+        return std::nullopt;
+
+    return PlayerDropResourceEvent{*playerId, *resourceId};
+}
+
+std::optional<GuiProtocolEvent> GuiProtocolDecoder::decodePlayerCollectResource(const ProtocolCommand &command) const
+{
+    if (!command.hasArgCount(2))
+        return std::nullopt;
+
+    const auto playerId = command.idArg(0);
+    const auto resourceId = command.intArg(1);
+
+    if (!playerId || !resourceId)
+        return std::nullopt;
+
+    return PlayerCollectResourceEvent{*playerId, *resourceId};
 }

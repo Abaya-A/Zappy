@@ -3,6 +3,7 @@
 #include "Player.hpp"
 #include "Tile.hpp"
 #include "Egg.hpp"
+#include "Resource.hpp"
 
 #include <iostream>
 #include <variant>
@@ -192,6 +193,22 @@ bool GuiEventApplier::applyEvent(const PlayerForkEvent &event)
 {
     std::cout << "event: player #" << event.playerId
               << " is laying an egg"
+              << std::endl;
+    return true;
+}
+
+bool GuiEventApplier::applyEvent(const PlayerDropResourceEvent &event)
+{
+    std::cout << "event: player #" << event.playerId
+              << " dropped resource " << event.resourceId
+              << std::endl;
+    return true;
+}
+
+bool GuiEventApplier::applyEvent(const PlayerCollectResourceEvent &event)
+{
+    std::cout << "event: player #" << event.playerId
+              << " collected resource " << event.resourceId
               << std::endl;
     return true;
 }

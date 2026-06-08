@@ -38,6 +38,9 @@ private:
     std::optional<GuiProtocolEvent> decodeEggDeath(const ProtocolCommand &command) const;
     std::optional<GuiProtocolEvent> decodePlayerFork(const ProtocolCommand &command) const;
 
+    std::optional<GuiProtocolEvent> decodePlayerDropResource(const ProtocolCommand &command) const;
+    std::optional<GuiProtocolEvent> decodePlayerCollectResource(const ProtocolCommand &command) const;
+
     std::optional<Tile::ResourceArray> parseTileResources(
         const ProtocolCommand &command,
         std::size_t startIndex
