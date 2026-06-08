@@ -214,6 +214,39 @@ std::vector<Vertex> buildPlayerVertices(const GameState &state)
     return vertices;
 }
 
+void appendEggDiamond(std::vector<Vertex> &vertices, int x, int y)
+{
+    const float centerX = static_cast<float>(x) + 0.5f;
+    const float centerY = static_cast<float>(y) + 0.5f;
+
+    constexpr float Radius = 0.18f;
+
+    const Magnum::Vector2 top{centerX, centerY + Radius};
+    const Magnum::Vector2 right{centerX + Radius, centerY};
+    const Magnum::Vector2 bottom{centerX, centerY - Radius};
+    const Magnum::Vector2 left{centerX - Radius, centerY};
+
+    vertices.push_back({top});
+    vertices.push_back({right});
+    vertices.push_back({bottom});
+
+    vertices.push_back({top});
+    vertices.push_back({bottom});
+    vertices.push_back({left});
+}
+
+std::vector<Vertex> buildEggVertices(const GameState &state)
+{
+    std::vector<Vertex> vertices;
+
+    for (const auto &[id, egg] : state.eggs()) {
+        (void)id;
+        appendEggDiamond(vertices, egg.x(), egg.y());
+    }
+
+    return vertices;
+}
+
 } // namespace
 
 MagnumRenderer::MagnumRenderer(const Arguments &arguments)
@@ -253,6 +286,7 @@ void MagnumRenderer::drawEvent()
     if (_state != nullptr && _state->isReady()) {
         drawMapGrid(*_state);
         drawTileResources(*_state);
+        drawEggs(*_state);
         drawPlayers(*_state);
     }
 
@@ -319,6 +353,27 @@ void MagnumRenderer::drawPlayers(const GameState &state)
 
     _shader
         .setColor(Magnum::Color4{0.20f, 0.45f, 1.00f, 1.0f})
+        .setTransformationProjectionMatrix(buildMapProjection(width, height))
+        .draw(mesh);
+}
+
+void MagnumRenderer::drawEggs(const GameState &state)
+{
+    const int width = state.width();
+    const int height = state.height();
+
+    if (width <= 0 || height <= 0)
+        return;
+
+    const std::vector<Vertex> vertices = buildEggVertices(state);
+
+    if (vertices.empty())
+        return;
+
+    Magnum::GL::Mesh mesh = buildMesh(Magnum::GL::MeshPrimitive::Triangles, vertices);
+
+    _shader
+        .setColor(Magnum::Color4{1.0f, 1.0f, 0.85f, 1.0f})
         .setTransformationProjectionMatrix(buildMapProjection(width, height))
         .draw(mesh);
 }
