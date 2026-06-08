@@ -17,6 +17,7 @@ public:
 private:
     void drawEvent() override;
     void drawMapGrid(const GameState &state);
+    void drawTileResources(const GameState &state);
 
     const GameState *_state;
     bool _isOpen;
