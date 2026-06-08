@@ -4,33 +4,36 @@
 
 #include <sstream>
 
+GuiProtocolDecoder::GuiProtocolDecoder()
+    : _decoders()
+{
+    registerDecoders();
+}
+
+void GuiProtocolDecoder::registerDecoders()
+{
+    _decoders["msz"] = &GuiProtocolDecoder::decodeMapSize;
+    _decoders["bct"] = &GuiProtocolDecoder::decodeTileContent;
+    _decoders["tna"] = &GuiProtocolDecoder::decodeTeamName;
+    _decoders["sgt"] = &GuiProtocolDecoder::decodeTimeUnit;
+    _decoders["seg"] = &GuiProtocolDecoder::decodeEndGame;
+    _decoders["smg"] = &GuiProtocolDecoder::decodeServerMessage;
+
+    _decoders["pnw"] = &GuiProtocolDecoder::decodePlayerNew;
+    _decoders["ppo"] = &GuiProtocolDecoder::decodePlayerPosition;
+    _decoders["plv"] = &GuiProtocolDecoder::decodePlayerLevel;
+    _decoders["pin"] = &GuiProtocolDecoder::decodePlayerInventory;
+    _decoders["pdi"] = &GuiProtocolDecoder::decodePlayerDeath;
+}
+
 std::optional<GuiProtocolEvent> GuiProtocolDecoder::decode(const ProtocolCommand &command) const
 {
-    if (command.is("msz"))
-        return decodeMapSize(command);
-    if (command.is("bct"))
-        return decodeTileContent(command);
-    if (command.is("tna"))
-        return decodeTeamName(command);
-    if (command.is("sgt"))
-        return decodeTimeUnit(command);
-    if (command.is("seg"))
-        return decodeEndGame(command);
-    if (command.is("smg"))
-        return decodeServerMessage(command);
+    const auto it = _decoders.find(command.name());
 
-    if (command.is("pnw"))
-        return decodePlayerNew(command);
-    if (command.is("ppo"))
-        return decodePlayerPosition(command);
-    if (command.is("plv"))
-        return decodePlayerLevel(command);
-    if (command.is("pin"))
-        return decodePlayerInventory(command);
-    if (command.is("pdi"))
-        return decodePlayerDeath(command);
+    if (it == _decoders.end())
+        return std::nullopt;
 
-    return std::nullopt;
+    return (this->*(it->second))(command);
 }
 
 std::optional<GuiProtocolEvent> GuiProtocolDecoder::decodeMapSize(const ProtocolCommand &command) const

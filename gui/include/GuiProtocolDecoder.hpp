@@ -4,12 +4,22 @@
 #include "ProtocolCommand.hpp"
 
 #include <optional>
+#include <string>
+#include <unordered_map>
 
 class GuiProtocolDecoder {
 public:
+    GuiProtocolDecoder();
+
     std::optional<GuiProtocolEvent> decode(const ProtocolCommand &command) const;
 
 private:
+    using Decoder = std::optional<GuiProtocolEvent> (GuiProtocolDecoder::*)(
+        const ProtocolCommand &command
+    ) const;
+
+    void registerDecoders();
+
     std::optional<GuiProtocolEvent> decodeMapSize(const ProtocolCommand &command) const;
     std::optional<GuiProtocolEvent> decodeTileContent(const ProtocolCommand &command) const;
     std::optional<GuiProtocolEvent> decodeTeamName(const ProtocolCommand &command) const;
@@ -32,4 +42,6 @@ private:
         const ProtocolCommand &command,
         std::size_t startIndex
     ) const;
+
+    std::unordered_map<std::string, Decoder> _decoders;
 };
