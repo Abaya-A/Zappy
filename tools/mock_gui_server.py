@@ -43,6 +43,7 @@ messages = [
     "plv #1 5\n",              # player #1 becomes visibly larger
 
     "pbc #1 hello from mock server\n",
+    "pdi #2\n",
 ]
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
