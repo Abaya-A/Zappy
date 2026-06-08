@@ -34,12 +34,14 @@ public:
     int height() const;
     int timeUnit() const;
 
+    bool isReady() const;
     bool hasWinner() const;
     const std::optional<std::string> &winner() const;
 
     const Tile *tileAt(int x, int y) const;
     Tile *tileAt(int x, int y);
 
+    const std::vector<Tile> &tiles() const;
     const std::vector<std::string> &teams() const;
     const std::unordered_map<int, Player> &players() const;
     const std::unordered_map<int, Egg> &eggs() const;

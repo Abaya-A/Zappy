@@ -189,3 +189,13 @@ std::size_t GameState::tileIndex(int x, int y) const
 {
     return static_cast<std::size_t>(y * _width + x);
 }
+
+bool GameState::isReady() const
+{
+    return _width > 0 && _height > 0 && !_tiles.empty();
+}
+
+const std::vector<Tile> &GameState::tiles() const
+{
+    return _tiles;
+}
