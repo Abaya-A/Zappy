@@ -27,12 +27,21 @@ messages = [
     # Multiple quantities, should still draw one marker per resource type for now
     "bct 4 4 5 2 3 1 4 2 1\n",
 
-    "pnw #1 2 3 1 1 teamA\n",
-    "pnw #2 5 6 2 2 teamB\n",
+    # Players
+    "pnw #1 2 3 1 1 teamA\n",  # player #1 starts level 1, north
+    "pnw #2 5 6 2 2 teamB\n",  # player #2 starts level 2, east
+
+    # Egg
     "enw #1 #1 4 4\n",
+
+    # Inventory
     "pin #1 2 3 10 1 0 0 0 0 0\n",
-    "ppo #1 3 3 2\n",
-    "plv #1 2\n",
+
+    # Move player #1, then level him up after a visible delay
+    "ppo #1 3 3 2\n",          # player #1 moves east
+    "pbc #1 watch me level up\n",
+    "plv #1 5\n",              # player #1 becomes visibly larger
+
     "pbc #1 hello from mock server\n",
 ]
 
