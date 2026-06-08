@@ -11,7 +11,8 @@ GuiClient::GuiClient(const std::string &host, int port)
       _network(),
       _parser(),
       _state(),
-      _protocolHandlers(_state),
+      _decoder(),
+      _applier(_state),
       _bootstrapSent(false)
 {
 }
@@ -53,7 +54,19 @@ void GuiClient::handleLine(const std::string &line)
         return;
     }
 
-    _protocolHandlers.handleCommand(command.value());
+    const auto event = _decoder.decode(command.value());
+
+    if (!event.has_value()) {
+        std::cerr << "[WARN]: invalid or unsupported protocol command: "
+                  << command->raw() << std::endl;
+        return;
+    }
+
+    if (!_applier.apply(event.value())) {
+        std::cerr << "[WARN]: rejected protocol event: "
+                  << command->raw() << std::endl;
+        return;
+    }
 }
 
 void GuiClient::sendBootstrapRequests()

@@ -1,9 +1,10 @@
 #pragma once
 
 #include "GameState.hpp"
-#include "GuiProtocolHandlers.hpp"
 #include "NetworkClient.hpp"
 #include "ProtocolParser.hpp"
+#include "GuiEventApplier.hpp"
+#include "GuiProtocolDecoder.hpp"
 
 #include <string>
 
@@ -23,6 +24,7 @@ private:
     NetworkClient _network;
     ProtocolParser _parser;
     GameState _state;
-    GuiProtocolHandlers _protocolHandlers;
+    GuiProtocolDecoder _decoder;
+    GuiEventApplier _applier;
     bool _bootstrapSent;
 };

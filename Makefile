@@ -25,7 +25,8 @@ GUI_SRC         := $(GUI_DIR)/src/main.cpp \
                    $(GUI_DIR)/src/Egg.cpp \
 				   $(GUI_DIR)/src/Player.cpp \
 				   $(GUI_DIR)/src/GameState.cpp \
-				   $(GUI_DIR)/src/GuiProtocolHandlers.cpp \
+				   $(GUI_DIR)/src/GuiProtocolDecoder.cpp  \
+				   $(GUI_DIR)/src/GuiEventApplier.cpp  \
 
 GUI_OBJ         := $(GUI_SRC:.cpp=.o)
 
