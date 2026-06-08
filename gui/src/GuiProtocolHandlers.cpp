@@ -13,6 +13,50 @@ GuiProtocolHandlers::GuiProtocolHandlers(GameState &state)
     registerHandlers();
 }
 
+bool GuiProtocolHandlers::expectArgCount(const ProtocolCommand &command, std::size_t expected) const
+{
+    if (command.hasArgCount(expected))
+        return true;
+
+    warnInvalid(command, "bad argument count");
+    return false;
+}
+
+void GuiProtocolHandlers::warnInvalid(const ProtocolCommand &command, const std::string &reason) const
+{
+    std::cerr << "[WARN]: invalid " << command.name()
+              << " command: " << reason
+              << ": " << command.raw()
+              << std::endl;
+}
+
+void GuiProtocolHandlers::warnRejected(const ProtocolCommand &command, const std::string &reason) const
+{
+    std::cerr << "[WARN]: rejected " << command.name()
+              << " command: " << reason
+              << ": " << command.raw()
+              << std::endl;
+}
+
+std::optional<Player::Inventory> GuiProtocolHandlers::parsePlayerInventory(
+    const ProtocolCommand &command,
+    std::size_t startIndex
+) const
+{
+    Player::Inventory inventory{};
+
+    for (std::size_t i = 0; i < Resource::COUNT; ++i) {
+        const auto quantity = command.intArg(startIndex + i);
+
+        if (!quantity)
+            return std::nullopt;
+
+        inventory[i] = *quantity;
+    }
+
+    return inventory;
+}
+
 void GuiProtocolHandlers::registerHandlers()
 {
     _handlers["msz"] = &GuiProtocolHandlers::handleMapSize;
@@ -43,24 +87,19 @@ void GuiProtocolHandlers::handleCommand(const ProtocolCommand &command)
 
 void GuiProtocolHandlers::handleMapSize(const ProtocolCommand &command)
 {
-    if (!command.hasArgCount(2)) {
-        std::cerr << "[WARN]: invalid msz argument count: "
-                  << command.raw() << std::endl;
+    if (!expectArgCount(command, 2))
         return;
-    }
 
     const auto width = command.intArg(0);
     const auto height = command.intArg(1);
 
     if (!width || !height) {
-        std::cerr << "[WARN]: invalid msz values: "
-                  << command.raw() << std::endl;
+        warnInvalid(command, "bad map size values");
         return;
     }
 
     if (!_state.setMapSize(*width, *height)) {
-        std::cerr << "[WARN]: rejected map size: "
-                  << command.raw() << std::endl;
+        warnRejected(command, "map size update failed");
         return;
     }
 
@@ -120,23 +159,18 @@ void GuiProtocolHandlers::handleTileContent(const ProtocolCommand &command)
 
 void GuiProtocolHandlers::handleTeamName(const ProtocolCommand &command)
 {
-    if (!command.hasArgCount(1)) {
-        std::cerr << "[WARN]: invalid tna argument count: "
-                  << command.raw() << std::endl;
+    if (!expectArgCount(command, 1))
         return;
-    }
 
     const auto name = command.arg(0);
 
     if (!name) {
-        std::cerr << "[WARN]: invalid tna value: "
-                  << command.raw() << std::endl;
+        warnInvalid(command, "bad team name value");
         return;
     }
 
     if (!_state.addTeam(*name)) {
-        std::cerr << "[WARN]: rejected team name: "
-                  << command.raw() << std::endl;
+        warnRejected(command, "team registration failed");
         return;
     }
 
@@ -145,23 +179,18 @@ void GuiProtocolHandlers::handleTeamName(const ProtocolCommand &command)
 
 void GuiProtocolHandlers::handleTimeUnit(const ProtocolCommand &command)
 {
-    if (!command.hasArgCount(1)) {
-        std::cerr << "[WARN]: invalid sgt argument count: "
-                  << command.raw() << std::endl;
+    if (!expectArgCount(command, 1))
         return;
-    }
 
     const auto timeUnit = command.intArg(0);
 
     if (!timeUnit) {
-        std::cerr << "[WARN]: invalid sgt value: "
-                  << command.raw() << std::endl;
+        warnInvalid(command, "bad time unit value");
         return;
     }
 
     if (!_state.setTimeUnit(*timeUnit)) {
-        std::cerr << "[WARN]: rejected time unit: "
-                  << command.raw() << std::endl;
+        warnRejected(command, "time unit update failed");
         return;
     }
 
@@ -182,17 +211,13 @@ void GuiProtocolHandlers::handleServerMessage(const ProtocolCommand &command)
 
 void GuiProtocolHandlers::handleEndGame(const ProtocolCommand &command)
 {
-    if (!command.hasArgCount(1)) {
-        std::cerr << "[WARN]: invalid seg argument count: "
-                  << command.raw() << std::endl;
+    if (!expectArgCount(command, 1))
         return;
-    }
 
     const auto team = command.arg(0);
 
     if (!team) {
-        std::cerr << "[WARN]: invalid seg value: "
-                  << command.raw() << std::endl;
+        warnInvalid(command, "bad winner team value");
         return;
     }
 
@@ -205,11 +230,8 @@ void GuiProtocolHandlers::handleEndGame(const ProtocolCommand &command)
 
 void GuiProtocolHandlers::handlePlayerNew(const ProtocolCommand &command)
 {
-    if (!command.hasArgCount(6)) {
-        std::cerr << "[WARN]: invalid pnw argument count: "
-                  << command.raw() << std::endl;
+    if (!expectArgCount(command, 6))
         return;
-    }
 
     const auto id = command.idArg(0);
     const auto x = command.intArg(1);
@@ -219,16 +241,14 @@ void GuiProtocolHandlers::handlePlayerNew(const ProtocolCommand &command)
     const auto teamName = command.arg(5);
 
     if (!id || !x || !y || !orientation || !level || !teamName) {
-        std::cerr << "[WARN]: invalid pnw values: "
-                  << command.raw() << std::endl;
+        warnInvalid(command, "bad new player values");
         return;
     }
 
     Player player(*id, *x, *y, *orientation, *level, *teamName);
 
     if (!_state.addPlayer(player)) {
-        std::cerr << "[WARN]: rejected new player: "
-                  << command.raw() << std::endl;
+        warnRejected(command, "player creation failed");
         return;
     }
 
@@ -242,11 +262,8 @@ void GuiProtocolHandlers::handlePlayerNew(const ProtocolCommand &command)
 
 void GuiProtocolHandlers::handlePlayerPosition(const ProtocolCommand &command)
 {
-    if (!command.hasArgCount(4)) {
-        std::cerr << "[WARN]: invalid ppo argument count: "
-                  << command.raw() << std::endl;
+    if (!expectArgCount(command, 4))
         return;
-    }
 
     const auto id = command.idArg(0);
     const auto x = command.intArg(1);
@@ -254,14 +271,12 @@ void GuiProtocolHandlers::handlePlayerPosition(const ProtocolCommand &command)
     const auto orientation = command.intArg(3);
 
     if (!id || !x || !y || !orientation) {
-        std::cerr << "[WARN]: invalid ppo values: "
-                  << command.raw() << std::endl;
+        warnInvalid(command, "bad player position values");
         return;
     }
 
     if (!_state.updatePlayerPosition(*id, *x, *y, *orientation)) {
-        std::cerr << "[WARN]: rejected player position: "
-                  << command.raw() << std::endl;
+        warnRejected(command, "player position update failed");
         return;
     }
 
@@ -273,24 +288,19 @@ void GuiProtocolHandlers::handlePlayerPosition(const ProtocolCommand &command)
 
 void GuiProtocolHandlers::handlePlayerLevel(const ProtocolCommand &command)
 {
-    if (!command.hasArgCount(2)) {
-        std::cerr << "[WARN]: invalid plv argument count: "
-                  << command.raw() << std::endl;
+    if (!expectArgCount(command, 2))
         return;
-    }
 
     const auto id = command.idArg(0);
     const auto level = command.intArg(1);
 
     if (!id || !level) {
-        std::cerr << "[WARN]: invalid plv values: "
-                  << command.raw() << std::endl;
+        warnInvalid(command, "bad player level values");
         return;
     }
 
     if (!_state.updatePlayerLevel(*id, *level)) {
-        std::cerr << "[WARN]: rejected player level: "
-                  << command.raw() << std::endl;
+        warnRejected(command, "player level update failed");
         return;
     }
 
@@ -301,39 +311,21 @@ void GuiProtocolHandlers::handlePlayerLevel(const ProtocolCommand &command)
 
 void GuiProtocolHandlers::handlePlayerInventory(const ProtocolCommand &command)
 {
-    if (!command.hasArgCount(10)) {
-        std::cerr << "[WARN]: invalid pin argument count: "
-                  << command.raw() << std::endl;
+    if (!expectArgCount(command, 10))
         return;
-    }
 
     const auto id = command.idArg(0);
     const auto x = command.intArg(1);
     const auto y = command.intArg(2);
+    const auto inventory = parsePlayerInventory(command, 3);
 
-    if (!id || !x || !y) {
-        std::cerr << "[WARN]: invalid pin position values: "
-                  << command.raw() << std::endl;
+    if (!id || !x || !y || !inventory) {
+        warnInvalid(command, "bad player inventory values");
         return;
     }
 
-    Player::Inventory inventory{};
-
-    for (std::size_t i = 0; i < Resource::COUNT; ++i) {
-        const auto quantity = command.intArg(i + 3);
-
-        if (!quantity) {
-            std::cerr << "[WARN]: invalid pin inventory value: "
-                      << command.raw() << std::endl;
-            return;
-        }
-
-        inventory[i] = *quantity;
-    }
-
-    if (!_state.updatePlayerInventory(*id, *x, *y, inventory)) {
-        std::cerr << "[WARN]: rejected player inventory: "
-                  << command.raw() << std::endl;
+    if (!_state.updatePlayerInventory(*id, *x, *y, *inventory)) {
+        warnRejected(command, "player inventory update failed");
         return;
     }
 
@@ -344,23 +336,18 @@ void GuiProtocolHandlers::handlePlayerInventory(const ProtocolCommand &command)
 
 void GuiProtocolHandlers::handlePlayerDeath(const ProtocolCommand &command)
 {
-    if (!command.hasArgCount(1)) {
-        std::cerr << "[WARN]: invalid pdi argument count: "
-                  << command.raw() << std::endl;
+    if (!expectArgCount(command, 1))
         return;
-    }
 
     const auto id = command.idArg(0);
 
     if (!id) {
-        std::cerr << "[WARN]: invalid pdi value: "
-                  << command.raw() << std::endl;
+        warnInvalid(command, "bad player death value");
         return;
     }
 
     if (!_state.removePlayer(*id)) {
-        std::cerr << "[WARN]: rejected player death: "
-                  << command.raw() << std::endl;
+        warnRejected(command, "player removal failed");
         return;
     }
 

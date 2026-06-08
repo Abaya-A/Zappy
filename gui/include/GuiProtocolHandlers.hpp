@@ -15,6 +15,11 @@ public:
 private:
     using Handler = void (GuiProtocolHandlers::*)(const ProtocolCommand &);
 
+    bool expectArgCount(const ProtocolCommand &command, std::size_t expected) const;
+    void warnInvalid(const ProtocolCommand &command, const std::string &reason) const;
+    void warnRejected(const ProtocolCommand &command, const std::string &reason) const;
+    std::optional<Player::Inventory> parsePlayerInventory(const ProtocolCommand &command, std::size_t startIndex) const;
+
     void registerHandlers();
 
     void handleMapSize(const ProtocolCommand &command);
