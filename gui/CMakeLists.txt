@@ -22,6 +22,7 @@ add_executable(zappy_gui
     src/state/Egg.cpp
     src/state/Player.cpp
     src/state/GameState.cpp
+    src/render/MagnumRenderer.cpp
 )
 
 target_include_directories(zappy_gui PRIVATE
