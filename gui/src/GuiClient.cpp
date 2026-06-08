@@ -11,10 +11,9 @@ GuiClient::GuiClient(const std::string &host, int port)
       _network(),
       _parser(),
       _state(),
-      _handlers(),
+      _protocolHandlers(_state),
       _bootstrapSent(false)
 {
-    registerHandlers();
 }
 
 bool GuiClient::connect()
@@ -54,7 +53,7 @@ void GuiClient::handleLine(const std::string &line)
         return;
     }
 
-    handleCommand(command.value());
+    _protocolHandlers.handleCommand(command.value());
 }
 
 void GuiClient::sendBootstrapRequests()

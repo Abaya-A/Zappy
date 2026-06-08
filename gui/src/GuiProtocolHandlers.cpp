@@ -1,21 +1,28 @@
-#include "GuiClient.hpp"
+#include "GuiProtocolHandlers.hpp"
 
 #include "Resource.hpp"
 #include "Tile.hpp"
 
 #include <iostream>
 
-void GuiClient::registerHandlers()
+GuiProtocolHandlers::GuiProtocolHandlers(GameState &state)
+    : _state(state),
+      _handlers()
 {
-    _handlers["msz"] = &GuiClient::handleMapSize;
-    _handlers["bct"] = &GuiClient::handleTileContent;
-    _handlers["tna"] = &GuiClient::handleTeamName;
-    _handlers["sgt"] = &GuiClient::handleTimeUnit;
-    _handlers["smg"] = &GuiClient::handleServerMessage;
-    _handlers["seg"] = &GuiClient::handleEndGame;
+    registerHandlers();
 }
 
-void GuiClient::handleCommand(const ProtocolCommand &command)
+void GuiProtocolHandlers::registerHandlers()
+{
+    _handlers["msz"] = &GuiProtocolHandlers::handleMapSize;
+    _handlers["bct"] = &GuiProtocolHandlers::handleTileContent;
+    _handlers["tna"] = &GuiProtocolHandlers::handleTeamName;
+    _handlers["sgt"] = &GuiProtocolHandlers::handleTimeUnit;
+    _handlers["smg"] = &GuiProtocolHandlers::handleServerMessage;
+    _handlers["seg"] = &GuiProtocolHandlers::handleEndGame;
+}
+
+void GuiProtocolHandlers::handleCommand(const ProtocolCommand &command)
 {
     auto handler = _handlers.find(command.name());
 
@@ -28,7 +35,7 @@ void GuiClient::handleCommand(const ProtocolCommand &command)
     (this->*(handler->second))(command);
 }
 
-void GuiClient::handleMapSize(const ProtocolCommand &command)
+void GuiProtocolHandlers::handleMapSize(const ProtocolCommand &command)
 {
     if (!command.hasArgCount(2)) {
         std::cerr << "[WARN]: invalid msz argument count: "
@@ -56,7 +63,7 @@ void GuiClient::handleMapSize(const ProtocolCommand &command)
               << std::endl;
 }
 
-void GuiClient::handleTileContent(const ProtocolCommand &command)
+void GuiProtocolHandlers::handleTileContent(const ProtocolCommand &command)
 {
     if (!command.hasArgCount(9)) {
         std::cerr << "[WARN]: invalid bct argument count: "
@@ -105,7 +112,7 @@ void GuiClient::handleTileContent(const ProtocolCommand &command)
               << " updated" << std::endl;
 }
 
-void GuiClient::handleTeamName(const ProtocolCommand &command)
+void GuiProtocolHandlers::handleTeamName(const ProtocolCommand &command)
 {
     if (!command.hasArgCount(1)) {
         std::cerr << "[WARN]: invalid tna argument count: "
@@ -130,7 +137,7 @@ void GuiClient::handleTeamName(const ProtocolCommand &command)
     std::cout << "event: team " << *name << std::endl;
 }
 
-void GuiClient::handleTimeUnit(const ProtocolCommand &command)
+void GuiProtocolHandlers::handleTimeUnit(const ProtocolCommand &command)
 {
     if (!command.hasArgCount(1)) {
         std::cerr << "[WARN]: invalid sgt argument count: "
@@ -157,7 +164,7 @@ void GuiClient::handleTimeUnit(const ProtocolCommand &command)
               << std::endl;
 }
 
-void GuiClient::handleServerMessage(const ProtocolCommand &command)
+void GuiProtocolHandlers::handleServerMessage(const ProtocolCommand &command)
 {
     std::cout << "event: server message";
 
@@ -167,7 +174,7 @@ void GuiClient::handleServerMessage(const ProtocolCommand &command)
     std::cout << std::endl;
 }
 
-void GuiClient::handleEndGame(const ProtocolCommand &command)
+void GuiProtocolHandlers::handleEndGame(const ProtocolCommand &command)
 {
     if (!command.hasArgCount(1)) {
         std::cerr << "[WARN]: invalid seg argument count: "
