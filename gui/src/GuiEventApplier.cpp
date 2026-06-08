@@ -2,6 +2,7 @@
 
 #include "Player.hpp"
 #include "Tile.hpp"
+#include "Egg.hpp"
 
 #include <iostream>
 #include <variant>
@@ -146,4 +147,51 @@ bool GuiEventApplier::applyEvent(const PlayerDeathEvent &event)
     if (ok)
         std::cout << "event: player #" << event.id  << " died" << std::endl;
     return ok;
+}
+
+bool GuiEventApplier::applyEvent(const EggNewEvent &event)
+{
+    const bool ok = _state.addEgg(Egg(
+        event.id,
+        event.playerId,
+        event.x,
+        event.y
+    ));
+
+    if (ok)
+        std::cout << "event: egg #" << event.id
+                  << " laid by player #" << event.playerId
+                  << " at " << event.x << "," << event.y
+                  << std::endl;
+    return ok;
+}
+
+bool GuiEventApplier::applyEvent(const EggHatchEvent &event)
+{
+    const bool ok = _state.removeEgg(event.id);
+
+    if (ok)
+        std::cout << "event: egg #" << event.id
+                  << " hatched"
+                  << std::endl;
+    return ok;
+}
+
+bool GuiEventApplier::applyEvent(const EggDeathEvent &event)
+{
+    const bool ok = _state.removeEgg(event.id);
+
+    if (ok)
+        std::cout << "event: egg #" << event.id
+                  << " died"
+                  << std::endl;
+    return ok;
+}
+
+bool GuiEventApplier::applyEvent(const PlayerForkEvent &event)
+{
+    std::cout << "event: player #" << event.playerId
+              << " is laying an egg"
+              << std::endl;
+    return true;
 }

@@ -24,6 +24,11 @@ void GuiProtocolDecoder::registerDecoders()
     _decoders["plv"] = &GuiProtocolDecoder::decodePlayerLevel;
     _decoders["pin"] = &GuiProtocolDecoder::decodePlayerInventory;
     _decoders["pdi"] = &GuiProtocolDecoder::decodePlayerDeath;
+
+    _decoders["enw"] = &GuiProtocolDecoder::decodeEggNew;
+    _decoders["ebo"] = &GuiProtocolDecoder::decodeEggHatch;
+    _decoders["edi"] = &GuiProtocolDecoder::decodeEggDeath;
+    _decoders["pfk"] = &GuiProtocolDecoder::decodePlayerFork;
 }
 
 std::optional<GuiProtocolEvent> GuiProtocolDecoder::decode(const ProtocolCommand &command) const
@@ -230,4 +235,59 @@ std::optional<Player::Inventory> GuiProtocolDecoder::parsePlayerInventory(
     }
 
     return inventory;
+}
+
+std::optional<GuiProtocolEvent> GuiProtocolDecoder::decodeEggNew(const ProtocolCommand &command) const
+{
+    if (!command.hasArgCount(4))
+        return std::nullopt;
+
+    const auto id = command.idArg(0);
+    const auto playerId = command.idArg(1);
+    const auto x = command.intArg(2);
+    const auto y = command.intArg(3);
+
+    if (!id || !playerId || !x || !y)
+        return std::nullopt;
+
+    return EggNewEvent{*id, *playerId, *x, *y};
+}
+
+std::optional<GuiProtocolEvent> GuiProtocolDecoder::decodeEggHatch(const ProtocolCommand &command) const
+{
+    if (!command.hasArgCount(1))
+        return std::nullopt;
+
+    const auto id = command.idArg(0);
+
+    if (!id)
+        return std::nullopt;
+
+    return EggHatchEvent{*id};
+}
+
+std::optional<GuiProtocolEvent> GuiProtocolDecoder::decodeEggDeath(const ProtocolCommand &command) const
+{
+    if (!command.hasArgCount(1))
+        return std::nullopt;
+
+    const auto id = command.idArg(0);
+
+    if (!id)
+        return std::nullopt;
+
+    return EggDeathEvent{*id};
+}
+
+std::optional<GuiProtocolEvent> GuiProtocolDecoder::decodePlayerFork(const ProtocolCommand &command) const
+{
+    if (!command.hasArgCount(1))
+        return std::nullopt;
+
+    const auto playerId = command.idArg(0);
+
+    if (!playerId)
+        return std::nullopt;
+
+    return PlayerForkEvent{*playerId};
 }

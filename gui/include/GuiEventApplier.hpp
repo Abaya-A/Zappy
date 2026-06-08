@@ -23,5 +23,10 @@ private:
     bool applyEvent(const PlayerInventoryEvent &event);
     bool applyEvent(const PlayerDeathEvent &event);
 
+    bool applyEvent(const EggNewEvent &event);
+    bool applyEvent(const EggHatchEvent &event);
+    bool applyEvent(const EggDeathEvent &event);
+    bool applyEvent(const PlayerForkEvent &event);
+
     GameState &_state;
 };

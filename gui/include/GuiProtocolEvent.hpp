@@ -65,6 +65,25 @@ struct PlayerDeathEvent {
     int id;
 };
 
+struct EggNewEvent {
+    int id;
+    int playerId;
+    int x;
+    int y;
+};
+
+struct EggHatchEvent {
+    int id;
+};
+
+struct EggDeathEvent {
+    int id;
+};
+
+struct PlayerForkEvent {
+    int playerId;
+};
+
 using GuiProtocolEvent = std::variant<
     MapSizeEvent,
     TileContentEvent,
@@ -76,5 +95,9 @@ using GuiProtocolEvent = std::variant<
     PlayerPositionEvent,
     PlayerLevelEvent,
     PlayerInventoryEvent,
-    PlayerDeathEvent
+    PlayerDeathEvent,
+    EggNewEvent,
+    EggHatchEvent,
+    EggDeathEvent,
+    PlayerForkEvent
 >;
