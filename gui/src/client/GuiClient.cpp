@@ -5,7 +5,7 @@
 #include <thread>
 #include <vector>
 
-GuiClient::GuiClient(const std::string &host, int port)
+GuiClient::GuiClient(const std::string &host, int port, int argc, char **argv)
     : _host(host),
       _port(port),
       _network(),
@@ -13,6 +13,7 @@ GuiClient::GuiClient(const std::string &host, int port)
       _state(),
       _decoder(),
       _applier(_state),
+      _renderer({argc, argv}),
       _bootstrapSent(false)
 {
 }
@@ -26,11 +27,14 @@ void GuiClient::run()
 {
     std::cout << "connected to " << _host << ":" << _port << std::endl;
 
-    while (_network.isConnected()) {
+    while (_network.isConnected() && _renderer.isOpen()) {
         std::vector<std::string> lines = _network.pollLines();
 
         for (const std::string &line : lines)
             handleLine(line);
+
+        _renderer.handleEvents();
+        _renderer.render(_state);
 
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }

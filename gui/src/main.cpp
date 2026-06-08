@@ -8,8 +8,8 @@ int main(int argc, char **argv)
 {
     try {
         GuiArgs args = parseGuiArgs(argc, argv);
-        GuiClient client(args.host, args.port);
-
+        GuiClient client(args.host, args.port, argc, argv);
+        
         if (!client.connect())
             return 84;
 

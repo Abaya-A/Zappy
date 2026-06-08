@@ -5,12 +5,13 @@
 #include "protocol/ProtocolParser.hpp"
 #include "protocol/GuiEventApplier.hpp"
 #include "protocol/GuiProtocolDecoder.hpp"
+#include "render/MagnumRenderer.hpp"
 
 #include <string>
 
 class GuiClient {
 public:
-    GuiClient(const std::string &host, int port);
+    GuiClient(const std::string &host, int port, int argc, char **argv);
 
     bool connect();
     void run();
@@ -26,5 +27,6 @@ private:
     GameState _state;
     GuiProtocolDecoder _decoder;
     GuiEventApplier _applier;
+    MagnumRenderer _renderer;
     bool _bootstrapSent;
 };
