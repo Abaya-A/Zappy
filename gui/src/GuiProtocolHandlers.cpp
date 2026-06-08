@@ -2,6 +2,7 @@
 
 #include "Resource.hpp"
 #include "Tile.hpp"
+#include "Player.hpp"
 
 #include <iostream>
 
@@ -20,6 +21,11 @@ void GuiProtocolHandlers::registerHandlers()
     _handlers["sgt"] = &GuiProtocolHandlers::handleTimeUnit;
     _handlers["smg"] = &GuiProtocolHandlers::handleServerMessage;
     _handlers["seg"] = &GuiProtocolHandlers::handleEndGame;
+    _handlers["pnw"] = &GuiProtocolHandlers::handlePlayerNew;
+    _handlers["ppo"] = &GuiProtocolHandlers::handlePlayerPosition;
+    _handlers["plv"] = &GuiProtocolHandlers::handlePlayerLevel;
+    _handlers["pin"] = &GuiProtocolHandlers::handlePlayerInventory;
+    _handlers["pdi"] = &GuiProtocolHandlers::handlePlayerDeath;
 }
 
 void GuiProtocolHandlers::handleCommand(const ProtocolCommand &command)
@@ -194,5 +200,171 @@ void GuiProtocolHandlers::handleEndGame(const ProtocolCommand &command)
 
     std::cout << "event: end game winner="
               << *team
+              << std::endl;
+}
+
+void GuiProtocolHandlers::handlePlayerNew(const ProtocolCommand &command)
+{
+    if (!command.hasArgCount(6)) {
+        std::cerr << "[WARN]: invalid pnw argument count: "
+                  << command.raw() << std::endl;
+        return;
+    }
+
+    const auto id = command.idArg(0);
+    const auto x = command.intArg(1);
+    const auto y = command.intArg(2);
+    const auto orientation = command.intArg(3);
+    const auto level = command.intArg(4);
+    const auto teamName = command.arg(5);
+
+    if (!id || !x || !y || !orientation || !level || !teamName) {
+        std::cerr << "[WARN]: invalid pnw values: "
+                  << command.raw() << std::endl;
+        return;
+    }
+
+    Player player(*id, *x, *y, *orientation, *level, *teamName);
+
+    if (!_state.addPlayer(player)) {
+        std::cerr << "[WARN]: rejected new player: "
+                  << command.raw() << std::endl;
+        return;
+    }
+
+    std::cout << "event: player #" << *id
+              << " joined team " << *teamName
+              << " at " << *x << "," << *y
+              << " orientation=" << *orientation
+              << " level=" << *level
+              << std::endl;
+}
+
+void GuiProtocolHandlers::handlePlayerPosition(const ProtocolCommand &command)
+{
+    if (!command.hasArgCount(4)) {
+        std::cerr << "[WARN]: invalid ppo argument count: "
+                  << command.raw() << std::endl;
+        return;
+    }
+
+    const auto id = command.idArg(0);
+    const auto x = command.intArg(1);
+    const auto y = command.intArg(2);
+    const auto orientation = command.intArg(3);
+
+    if (!id || !x || !y || !orientation) {
+        std::cerr << "[WARN]: invalid ppo values: "
+                  << command.raw() << std::endl;
+        return;
+    }
+
+    if (!_state.updatePlayerPosition(*id, *x, *y, *orientation)) {
+        std::cerr << "[WARN]: rejected player position: "
+                  << command.raw() << std::endl;
+        return;
+    }
+
+    std::cout << "event: player #" << *id
+              << " moved to " << *x << "," << *y
+              << " orientation=" << *orientation
+              << std::endl;
+}
+
+void GuiProtocolHandlers::handlePlayerLevel(const ProtocolCommand &command)
+{
+    if (!command.hasArgCount(2)) {
+        std::cerr << "[WARN]: invalid plv argument count: "
+                  << command.raw() << std::endl;
+        return;
+    }
+
+    const auto id = command.idArg(0);
+    const auto level = command.intArg(1);
+
+    if (!id || !level) {
+        std::cerr << "[WARN]: invalid plv values: "
+                  << command.raw() << std::endl;
+        return;
+    }
+
+    if (!_state.updatePlayerLevel(*id, *level)) {
+        std::cerr << "[WARN]: rejected player level: "
+                  << command.raw() << std::endl;
+        return;
+    }
+
+    std::cout << "event: player #" << *id
+              << " level=" << *level
+              << std::endl;
+}
+
+void GuiProtocolHandlers::handlePlayerInventory(const ProtocolCommand &command)
+{
+    if (!command.hasArgCount(10)) {
+        std::cerr << "[WARN]: invalid pin argument count: "
+                  << command.raw() << std::endl;
+        return;
+    }
+
+    const auto id = command.idArg(0);
+    const auto x = command.intArg(1);
+    const auto y = command.intArg(2);
+
+    if (!id || !x || !y) {
+        std::cerr << "[WARN]: invalid pin position values: "
+                  << command.raw() << std::endl;
+        return;
+    }
+
+    Player::Inventory inventory{};
+
+    for (std::size_t i = 0; i < Resource::COUNT; ++i) {
+        const auto quantity = command.intArg(i + 3);
+
+        if (!quantity) {
+            std::cerr << "[WARN]: invalid pin inventory value: "
+                      << command.raw() << std::endl;
+            return;
+        }
+
+        inventory[i] = *quantity;
+    }
+
+    if (!_state.updatePlayerInventory(*id, *x, *y, inventory)) {
+        std::cerr << "[WARN]: rejected player inventory: "
+                  << command.raw() << std::endl;
+        return;
+    }
+
+    std::cout << "event: player #" << *id
+              << " inventory updated at " << *x << "," << *y
+              << std::endl;
+}
+
+void GuiProtocolHandlers::handlePlayerDeath(const ProtocolCommand &command)
+{
+    if (!command.hasArgCount(1)) {
+        std::cerr << "[WARN]: invalid pdi argument count: "
+                  << command.raw() << std::endl;
+        return;
+    }
+
+    const auto id = command.idArg(0);
+
+    if (!id) {
+        std::cerr << "[WARN]: invalid pdi value: "
+                  << command.raw() << std::endl;
+        return;
+    }
+
+    if (!_state.removePlayer(*id)) {
+        std::cerr << "[WARN]: rejected player death: "
+                  << command.raw() << std::endl;
+        return;
+    }
+
+    std::cout << "event: player #" << *id
+              << " died"
               << std::endl;
 }
