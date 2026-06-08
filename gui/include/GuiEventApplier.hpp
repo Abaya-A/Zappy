@@ -31,5 +31,11 @@ private:
     bool applyEvent(const PlayerDropResourceEvent &event);
     bool applyEvent(const PlayerCollectResourceEvent &event);
 
+    bool applyEvent(const PlayerExpulsionEvent &event);
+    bool applyEvent(const PlayerBroadcastEvent &event);
+
+    bool applyEvent(const IncantationStartEvent &event);
+    bool applyEvent(const IncantationEndEvent &event);
+
     GameState &_state;
 };

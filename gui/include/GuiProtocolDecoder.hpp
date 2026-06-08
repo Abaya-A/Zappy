@@ -41,6 +41,12 @@ private:
     std::optional<GuiProtocolEvent> decodePlayerDropResource(const ProtocolCommand &command) const;
     std::optional<GuiProtocolEvent> decodePlayerCollectResource(const ProtocolCommand &command) const;
 
+    std::optional<GuiProtocolEvent> decodePlayerExpulsion(const ProtocolCommand &command) const;
+    std::optional<GuiProtocolEvent> decodePlayerBroadcast(const ProtocolCommand &command) const;
+
+    std::optional<GuiProtocolEvent> decodeIncantationStart(const ProtocolCommand &command) const;
+    std::optional<GuiProtocolEvent> decodeIncantationEnd(const ProtocolCommand &command) const;
+
     std::optional<Tile::ResourceArray> parseTileResources(
         const ProtocolCommand &command,
         std::size_t startIndex

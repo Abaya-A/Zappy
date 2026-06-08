@@ -212,3 +212,45 @@ bool GuiEventApplier::applyEvent(const PlayerCollectResourceEvent &event)
               << std::endl;
     return true;
 }
+
+bool GuiEventApplier::applyEvent(const PlayerExpulsionEvent &event)
+{
+    std::cout << "event: player #" << event.playerId
+              << " expelled nearby players"
+              << std::endl;
+    return true;
+}
+
+bool GuiEventApplier::applyEvent(const PlayerBroadcastEvent &event)
+{
+    std::cout << "event: player #" << event.playerId
+              << " broadcast: " << event.message
+              << std::endl;
+    return true;
+}
+
+bool GuiEventApplier::applyEvent(const IncantationStartEvent &event)
+{
+    std::cout << "event: incantation started at "
+              << event.x << "," << event.y
+              << " level=" << event.level
+              << " players=";
+
+    for (std::size_t i = 0; i < event.playerIds.size(); ++i) {
+        if (i != 0)
+            std::cout << ",";
+        std::cout << "#" << event.playerIds[i];
+    }
+
+    std::cout << std::endl;
+    return true;
+}
+
+bool GuiEventApplier::applyEvent(const IncantationEndEvent &event)
+{
+    std::cout << "event: incantation ended at "
+              << event.x << "," << event.y
+              << " result=" << event.result
+              << std::endl;
+    return true;
+}

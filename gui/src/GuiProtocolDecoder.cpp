@@ -3,6 +3,7 @@
 #include "Resource.hpp"
 
 #include <sstream>
+#include <vector>
 
 GuiProtocolDecoder::GuiProtocolDecoder()
     : _decoders()
@@ -32,6 +33,12 @@ void GuiProtocolDecoder::registerDecoders()
 
     _decoders["pdr"] = &GuiProtocolDecoder::decodePlayerDropResource;
     _decoders["pgt"] = &GuiProtocolDecoder::decodePlayerCollectResource;
+
+    _decoders["pex"] = &GuiProtocolDecoder::decodePlayerExpulsion;
+    _decoders["pbc"] = &GuiProtocolDecoder::decodePlayerBroadcast;
+
+    _decoders["pic"] = &GuiProtocolDecoder::decodeIncantationStart;
+    _decoders["pie"] = &GuiProtocolDecoder::decodeIncantationEnd;
 }
 
 std::optional<GuiProtocolEvent> GuiProtocolDecoder::decode(const ProtocolCommand &command) const
@@ -321,4 +328,79 @@ std::optional<GuiProtocolEvent> GuiProtocolDecoder::decodePlayerCollectResource(
         return std::nullopt;
 
     return PlayerCollectResourceEvent{*playerId, *resourceId};
+}
+
+std::optional<GuiProtocolEvent> GuiProtocolDecoder::decodePlayerExpulsion(const ProtocolCommand &command) const
+{
+    if (!command.hasArgCount(1))
+        return std::nullopt;
+
+    const auto playerId = command.idArg(0);
+
+    if (!playerId)
+        return std::nullopt;
+
+    return PlayerExpulsionEvent{*playerId};
+}
+
+std::optional<GuiProtocolEvent> GuiProtocolDecoder::decodePlayerBroadcast(const ProtocolCommand &command) const
+{
+    if (command.args().size() < 2)
+        return std::nullopt;
+
+    const auto playerId = command.idArg(0);
+
+    if (!playerId)
+        return std::nullopt;
+
+    std::ostringstream message;
+
+    for (std::size_t i = 1; i < command.args().size(); ++i) {
+        if (i != 1)
+            message << " ";
+        message << command.args()[i];
+    }
+
+    return PlayerBroadcastEvent{*playerId, message.str()};
+}
+
+std::optional<GuiProtocolEvent> GuiProtocolDecoder::decodeIncantationStart(const ProtocolCommand &command) const
+{
+    if (command.args().size() < 4)
+        return std::nullopt;
+
+    const auto x = command.intArg(0);
+    const auto y = command.intArg(1);
+    const auto level = command.intArg(2);
+
+    if (!x || !y || !level)
+        return std::nullopt;
+
+    std::vector<int> playerIds;
+
+    for (std::size_t i = 3; i < command.args().size(); ++i) {
+        const auto playerId = command.idArg(i);
+
+        if (!playerId)
+            return std::nullopt;
+
+        playerIds.push_back(*playerId);
+    }
+
+    return IncantationStartEvent{*x, *y, *level, playerIds};
+}
+
+std::optional<GuiProtocolEvent> GuiProtocolDecoder::decodeIncantationEnd(const ProtocolCommand &command) const
+{
+    if (!command.hasArgCount(3))
+        return std::nullopt;
+
+    const auto x = command.intArg(0);
+    const auto y = command.intArg(1);
+    const auto result = command.intArg(2);
+
+    if (!x || !y || !result)
+        return std::nullopt;
+
+    return IncantationEndEvent{*x, *y, *result};
 }

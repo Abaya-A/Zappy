@@ -5,6 +5,7 @@
 
 #include <string>
 #include <variant>
+#include <vector>
 
 struct MapSizeEvent {
     int width;
@@ -94,6 +95,28 @@ struct PlayerCollectResourceEvent {
     int resourceId;
 };
 
+struct PlayerExpulsionEvent {
+    int playerId;
+};
+
+struct PlayerBroadcastEvent {
+    int playerId;
+    std::string message;
+};
+
+struct IncantationStartEvent {
+    int x;
+    int y;
+    int level;
+    std::vector<int> playerIds;
+};
+
+struct IncantationEndEvent {
+    int x;
+    int y;
+    int result;
+};
+
 using GuiProtocolEvent = std::variant<
     MapSizeEvent,
     TileContentEvent,
@@ -111,5 +134,9 @@ using GuiProtocolEvent = std::variant<
     EggDeathEvent,
     PlayerForkEvent,
     PlayerDropResourceEvent,
-    PlayerCollectResourceEvent
+    PlayerCollectResourceEvent,
+    PlayerExpulsionEvent,
+    PlayerBroadcastEvent,
+    IncantationStartEvent,
+    IncantationEndEvent
 >;
