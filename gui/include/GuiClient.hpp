@@ -3,6 +3,7 @@
 #include "NetworkClient.hpp"
 #include "ProtocolCommand.hpp"
 #include "ProtocolParser.hpp"
+#include "GameState.hpp"
 
 #include <string>
 #include <unordered_map>
@@ -21,6 +22,7 @@ private:
     int _port;
     NetworkClient _network;
     ProtocolParser _parser;
+    GameState _state;
     std::unordered_map<std::string, CommandHandler> _handlers;
     bool _bootstrapSent;
 
