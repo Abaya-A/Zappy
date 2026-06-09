@@ -62,14 +62,29 @@ def scenario_messages():
         "pic 3 3 2 #1 #2\n",
         "pie 3 3 1\n",
 
+        # Player #1 expels
+        "pex #1\n",
+
         # Egg disappears
         "ebo #1\n",
+
         # Player #2 disappears
-        "pex #1\n",
         "pdi #2\n",
 
         # Player #1 broadcasts again after other events
         "pbc #1 hello from mock server\n",
+
+        # Remaining protocol coverage
+        "pfk #1\n",
+        "pdr #1 0\n",
+        "pgt #1 1\n",
+        "sst 120\n",
+        "smg server maintenance soon\n",
+        "suc\n",
+        "sbp\n",
+
+        # End game
+        "seg teamA\n",
     ]
 
 def message_delay(message):
@@ -77,6 +92,12 @@ def message_delay(message):
         return 2.0
     if message.startswith("pbc "):
         return 1.0
+    if message.startswith("pex "):
+        return 1.0
+    if message.startswith("pfk "):
+        return 0.8
+    if message.startswith("pdr ") or message.startswith("pgt "):
+        return 0.8
     if message.startswith("plv "):
         return 1.0
     if message.startswith("pie "):
@@ -85,8 +106,9 @@ def message_delay(message):
         return 1.0
     if message.startswith("pdi "):
         return 1.0
+    if message.startswith("seg "):
+        return 2.0
     return 0.3
-
 
 def build_messages():
     return (
