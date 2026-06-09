@@ -1,0 +1,66 @@
+name: GUI CI
+
+on:
+  push:
+    branches:
+      - main
+      - "feat/**"
+      - "ci/**"
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  gui-build:
+    name: Build GUI and run GUI tests
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            ninja-build \
+            git \
+            pkg-config \
+            libsdl2-dev \
+            libgl1-mesa-dev \
+            libegl1-mesa-dev \
+            libx11-dev \
+            libxcursor-dev \
+            libxrandr-dev \
+            libxi-dev
+
+      - name: Build and install Corrade
+        run: |
+          git clone --depth 1 https://github.com/mosra/corrade.git /tmp/corrade
+          cmake -S /tmp/corrade -B /tmp/corrade/build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/usr/local
+          cmake --build /tmp/corrade/build
+          sudo cmake --install /tmp/corrade/build
+
+      - name: Build and install Magnum
+        run: |
+          git clone --depth 1 https://github.com/mosra/magnum.git /tmp/magnum
+          cmake -S /tmp/magnum -B /tmp/magnum/build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/usr/local \
+            -DMAGNUM_WITH_GL=ON \
+            -DMAGNUM_WITH_SHADERS=ON \
+            -DMAGNUM_WITH_SDL2APPLICATION=ON
+          cmake --build /tmp/magnum/build
+          sudo cmake --install /tmp/magnum/build
+
+      - name: Run GUI unit tests
+        run: |
+          make tests_run
+
+      - name: Build GUI
+        run: |
+          make zappy_gui
