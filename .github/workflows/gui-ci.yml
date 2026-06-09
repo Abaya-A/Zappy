@@ -10,6 +10,10 @@ on:
     branches:
       - main
 
+env:
+  DEPS_DIR: ${{ github.workspace }}/.ci-deps
+  BUILD_TYPE: Release
+
 jobs:
   gui-build:
     name: Build GUI and run GUI tests
@@ -36,26 +40,42 @@ jobs:
             libxrandr-dev \
             libxi-dev
 
+      - name: Restore Corrade/Magnum cache
+        id: magnum-cache
+        uses: actions/cache@v4
+        with:
+          path: .ci-deps
+          key: magnum-deps-${{ runner.os }}-${{ hashFiles('.github/workflows/gui-ci.yml') }}
+
+      - name: Configure dependency paths
+        run: |
+          echo "${DEPS_DIR}/bin" >> "$GITHUB_PATH"
+          echo "CMAKE_PREFIX_PATH=${DEPS_DIR}" >> "$GITHUB_ENV"
+          echo "PKG_CONFIG_PATH=${DEPS_DIR}/lib/pkgconfig:${DEPS_DIR}/lib/x86_64-linux-gnu/pkgconfig" >> "$GITHUB_ENV"
+
       - name: Build and install Corrade
+        if: steps.magnum-cache.outputs.cache-hit != 'true'
         run: |
           git clone --depth 1 https://github.com/mosra/corrade.git /tmp/corrade
           cmake -S /tmp/corrade -B /tmp/corrade/build -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_INSTALL_PREFIX=/usr/local
+            -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+            -DCMAKE_INSTALL_PREFIX=${DEPS_DIR}
           cmake --build /tmp/corrade/build
-          sudo cmake --install /tmp/corrade/build
+          cmake --install /tmp/corrade/build
 
       - name: Build and install Magnum
+        if: steps.magnum-cache.outputs.cache-hit != 'true'
         run: |
           git clone --depth 1 https://github.com/mosra/magnum.git /tmp/magnum
           cmake -S /tmp/magnum -B /tmp/magnum/build -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_INSTALL_PREFIX=/usr/local \
+            -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+            -DCMAKE_INSTALL_PREFIX=${DEPS_DIR} \
+            -DCMAKE_PREFIX_PATH=${DEPS_DIR} \
             -DMAGNUM_WITH_GL=ON \
             -DMAGNUM_WITH_SHADERS=ON \
             -DMAGNUM_WITH_SDL2APPLICATION=ON
           cmake --build /tmp/magnum/build
-          sudo cmake --install /tmp/magnum/build
+          cmake --install /tmp/magnum/build
 
       - name: Run GUI unit tests
         run: |

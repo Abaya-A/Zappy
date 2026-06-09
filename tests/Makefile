@@ -13,6 +13,9 @@ TEST_COMMON_SRC := $(GUI_DIR)/src/protocol/ProtocolCommand.cpp \
                    $(GUI_DIR)/src/state/Tile.cpp \
                    $(GUI_DIR)/src/state/Egg.cpp \
                    $(GUI_DIR)/src/state/Player.cpp \
+                   $(GUI_DIR)/src/state/Incantation.cpp \
+                   $(GUI_DIR)/src/state/Broadcast.cpp \
+                   $(GUI_DIR)/src/state/Expulsion.cpp \
                    $(GUI_DIR)/src/state/GameState.cpp \
                    $(GUI_DIR)/src/protocol/GuiProtocolDecoder.cpp \
                    $(GUI_DIR)/src/protocol/GuiEventApplier.cpp
