@@ -24,7 +24,7 @@ GuiArgs parseGuiArgs(int argc, char **argv)
 {
     GuiArgs args = {
         .port = 0,
-        .host = ""
+        .host = "127.0.0.0"
     };
 
     if (argc == 2 && std::string(argv[1]) == "--help") {
@@ -50,8 +50,6 @@ GuiArgs parseGuiArgs(int argc, char **argv)
 
     if (args.port == 0)
         throw std::runtime_error("missing argument: -p");
-    if (args.host.empty())
-        throw std::runtime_error("missing argument: -h");
 
     return args;
 }
