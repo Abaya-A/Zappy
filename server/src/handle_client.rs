@@ -66,7 +66,6 @@ fn handle_handshake(token: Token, server: &mut Server, team: String) {
     if valid_team {
         client.team_name = Some(team.clone());
         if team == "GRAPHIC" {
-           let _ = utils::send_response(&mut client.stream, &"Graphical connect successfuly\n".to_string());
         } else {
             let res = format!("{}\n{} {}\n", available_clients_slots, server.params.width, server.params.height);
             let _ = utils::send_response(&mut client.stream, &res);
