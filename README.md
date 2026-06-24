@@ -149,9 +149,9 @@ make test
 
 - [X] **`Task 1`**: ~~Project management.~~
 - [] **`Task 2`**: CI/CD workflow with a mirror.
-- [] **`Task 3`**: build Zappy Ai.
-- [] **`Task 4`**: build Zappy server.
-- [] **`Task 5`**: build Zappy gui.
+- [X] **`Task 3`**: build Zappy Ai.
+- [X] **`Task 4`**: build Zappy server.
+- [X] **`Task 5`**: build Zappy gui.
 - [] **`Task 6`**: update user and dev doc.
 
 ---
