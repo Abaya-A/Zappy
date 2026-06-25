@@ -5,15 +5,14 @@
  *  Copyright (c) 2026 Jules Nourdin
  */
 
+use crate::handle_command;
+use crate::handle_command::{Command, GuiCommand, handle_gui_command};
 use crate::utils;
 use crate::utils::Server;
-use crate::handle_command;
-use crate::handle_command::Command;
 use mio::Token;
 use std::io::Read;
 
-pub fn handle_client(token: Token, server: &mut Server) -> Result<(), std::io::Error>
-{
+pub fn handle_client(token: Token, server: &mut Server) -> Result<(), std::io::Error> {
     let mut requests = Vec::new();
 
     {
@@ -23,15 +22,13 @@ pub fn handle_client(token: Token, server: &mut Server) -> Result<(), std::io::E
         match client.stream.read(&mut buf) {
             Ok(0) => {
                 server.clients.remove(&token);
-                return Ok(())
+                return Ok(());
             }
             Ok(n) => {
                 let data = String::from_utf8_lossy(&buf[..n]);
                 client.buffer.push_str(&data);
             }
-            Err(e) => {
-                return Err(e)
-            }
+            Err(e) => return Err(e),
         }
 
         while let Some(pos) = client.buffer.find('\n') {
@@ -42,10 +39,18 @@ pub fn handle_client(token: Token, server: &mut Server) -> Result<(), std::io::E
     }
 
     for req in requests {
-        let is_auth = server.clients.get(&token).unwrap().team_name.is_some();
+        let client = server.clients.get(&token).unwrap();
+        let is_auth = client.team_name.is_some();
+        let is_gui = client.is_gui;
+
         if is_auth {
-            let cmd = Command::from_str(&req);
-            handle_command::handle_command(token, server, cmd);
+            if is_gui {
+                let cmd = GuiCommand::from_str(&req);
+                handle_gui_command(token, server, cmd);
+            } else {
+                let cmd = Command::from_str(&req);
+                handle_command::handle_command(token, server, cmd);
+            }
         } else {
             handle_handshake(token, server, req);
         }
@@ -58,16 +63,23 @@ fn handle_handshake(token: Token, server: &mut Server, team: String) {
     let mut valid_team = false;
     let available_clients_slots = server.params.team_clients_nb - server.clients.len() as u32;
 
-    if server.params.teams_names.contains(&team) { valid_team = true; }
-    else if team == "GRAPHIC" { valid_team = true; }
+    if server.params.teams_names.contains(&team) {
+        valid_team = true;
+    } else if team == "GRAPHIC" {
+        valid_team = true;
+    }
 
     let client = server.clients.get_mut(&token).unwrap();
 
     if valid_team {
         client.team_name = Some(team.clone());
         if team == "GRAPHIC" {
+            client.is_gui = true;
         } else {
-            let res = format!("{}\n{} {}\n", available_clients_slots, server.params.width, server.params.height);
+            let res = format!(
+                "{}\n{} {}\n",
+                available_clients_slots, server.params.width, server.params.height
+            );
             let _ = utils::send_response(&mut client.stream, &res);
         }
     } else {

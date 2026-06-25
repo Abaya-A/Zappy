@@ -5,22 +5,24 @@
  *  Copyright (c) 2026 Jules Nourdin
 */
 
-use crate::utils::ServerParams;
-use crate::utils::Server;
 use crate::handle_client;
+use crate::utils::Server;
+use crate::utils::ServerParams;
 
-use std::net::SocketAddr;
 use mio::net::TcpListener;
 use mio::{Events, Interest, Poll, Token};
 use std::collections::HashMap;
+use std::net::SocketAddr;
 
 const SERVER_TOKEN: Token = Token(0);
 
-pub fn start_server(params: ServerParams)
-{
+pub fn start_server(params: ServerParams) {
     let mut poll = Poll::new().unwrap();
     let mut events = Events::with_capacity(128);
-    let mut server = Server { clients: HashMap::new(), params: params.clone() };
+    let mut server = Server {
+        clients: HashMap::new(),
+        params: params.clone(),
+    };
 
     let mut next_token = 1;
 
@@ -36,7 +38,9 @@ pub fn start_server(params: ServerParams)
 
     loop {
         if let Err(e) = poll.poll(&mut events, None) {
-            if e.kind() == std::io::ErrorKind::Interrupted { continue; }
+            if e.kind() == std::io::ErrorKind::Interrupted {
+                continue;
+            }
             eprintln!("Poll error: {}", e);
             std::process::exit(84);
         }
@@ -59,6 +63,7 @@ pub fn start_server(params: ServerParams)
                         stream: client_socket,
                         buffer: String::new(),
                         team_name: None,
+                        is_gui: false,
                     };
 
                     server.clients.insert(token, client);
