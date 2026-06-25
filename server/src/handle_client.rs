@@ -59,9 +59,12 @@ pub fn handle_client(token: Token, server: &mut Server) -> Result<(), std::io::E
     Ok(())
 }
 
-fn handle_handshake(token: Token, server: &mut Server, team: String) {
-    let mut valid_team = false;
+fn handle_handshake(token: Token, server: &mut Server, team: String)
+{
+    let valid_team = server.params.teams_names.contains(&team) || team == "GRAPHIC";
     let available_clients_slots = server.params.team_clients_nb - server.clients.len() as u32;
+    let rand_x = token.0 as u32 % server.params.width;
+    let rand_y = token.0 as u32 % server.params.height;
 
     if server.params.teams_names.contains(&team) {
         valid_team = true;
@@ -76,10 +79,15 @@ fn handle_handshake(token: Token, server: &mut Server, team: String) {
         if team == "GRAPHIC" {
             client.is_gui = true;
         } else {
-            let res = format!(
-                "{}\n{} {}\n",
-                available_clients_slots, server.params.width, server.params.height
-            );
+            client.player = Some(utils::Player {
+                x: rand_x,
+                y: rand_y,
+                direction: utils::Direction::N,
+                level: 1,
+                food: 10,
+                inventory: std::collections::HashMap::new(),
+            });
+            let res = format!("{}\n{} {}\n", available_clients_slots, server.params.width, server.params.height);
             let _ = utils::send_response(&mut client.stream, &res);
         }
     } else {
