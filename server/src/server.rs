@@ -21,7 +21,7 @@ pub fn start_server(params: ServerParams) {
     let mut poll = Poll::new().unwrap();
     let mut events = Events::with_capacity(128);
 
-    init_world();
+    let mut server = init_world(&params);
 
     let mut next_token = 1;
 
@@ -80,8 +80,9 @@ pub fn start_server(params: ServerParams) {
     }
 }
 
-fn init_world() {
-        let mut tiles = Vec::new();
+fn init_world(params: &ServerParams) -> Server
+{
+    let mut tiles = Vec::new();
     for _ in 0..params.height {
         let mut row = Vec::new();
         for _ in 0..params.width {
@@ -100,15 +101,17 @@ fn init_world() {
         }
         tiles.push(row);
     }
-
+ 
     let mut server = Server {
         clients: HashMap::new(),
         params: params.clone(),
         world: World { tiles },
     };
-
+ 
     spawn_resources(&mut server);
+    server
 }
+
 
 fn spawn_resources(server: &mut Server) {
     let width = server.params.width;
