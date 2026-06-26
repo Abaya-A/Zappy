@@ -51,6 +51,7 @@ set(ZAPPY_GUI_SOURCES
     src/render/3d/RenderGeometry3D.cpp
     src/render/3d/RenderMeshFactory3D.cpp
     src/render/3d/MapRenderer3D.cpp
+    src/render/3d/PlanetCameraController.cpp
 )
 
 add_executable(zappy_gui

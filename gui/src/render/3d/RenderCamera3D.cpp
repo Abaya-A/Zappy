@@ -4,17 +4,21 @@
 #include <Magnum/Math/Matrix4.h>
 
 #include <algorithm>
+#include <cmath>
 
 namespace zappy::render3d {
 namespace {
 
 constexpr float PlanetRadiusScale = 0.45f;
 constexpr float PlanetRadiusPadding = 2.0f;
-constexpr float CameraVerticalOffset = 0.75f;
-constexpr float CameraDistance = 7.0f;
-constexpr float FieldOfView = 40.0f;
+constexpr float CameraDistance = 5.2f;
+constexpr float FieldOfView = 35.0f;
 constexpr float NearPlane = 0.1f;
 constexpr float FarPlaneMultiplier = 12.0f;
+constexpr float DefaultYaw = 0.0f;
+constexpr float DefaultPitch = 0.25f;
+constexpr float MinPitch = -1.15f;
+constexpr float MaxPitch = 1.15f;
 
 float computePlanetRadius(int mapWidth, int mapHeight)
 {
@@ -36,6 +40,12 @@ float computeAspectRatio(const Magnum::Vector2i &framebufferSize)
 
 }
 
+RenderCamera3D::RenderCamera3D()
+    : _yaw(DefaultYaw),
+      _pitch(DefaultPitch)
+{
+}
+
 Magnum::Matrix4 RenderCamera3D::projection(
     int mapWidth,
     int mapHeight,
@@ -43,14 +53,17 @@ Magnum::Matrix4 RenderCamera3D::projection(
 ) const
 {
     const float radius = computePlanetRadius(mapWidth, mapHeight);
+    const float distance = radius * CameraDistance;
     const float aspect = computeAspectRatio(framebufferSize);
+
+    const float cosPitch = std::cos(_pitch);
 
     const Magnum::Vector3 center{0.0f, 0.0f, 0.0f};
 
     const Magnum::Vector3 eye{
-        0.0f,
-        radius * CameraVerticalOffset,
-        radius * CameraDistance
+        distance * std::sin(_yaw) * cosPitch,
+        distance * std::sin(_pitch),
+        distance * std::cos(_yaw) * cosPitch
     };
 
     const Magnum::Matrix4 projection =
@@ -69,6 +82,18 @@ Magnum::Matrix4 RenderCamera3D::projection(
         );
 
     return projection * camera.inverted();
+}
+
+void RenderCamera3D::rotate(float yawDelta, float pitchDelta)
+{
+    _yaw += yawDelta;
+    _pitch = std::clamp(_pitch + pitchDelta, MinPitch, MaxPitch);
+}
+
+void RenderCamera3D::reset()
+{
+    _yaw = DefaultYaw;
+    _pitch = DefaultPitch;
 }
 
 }

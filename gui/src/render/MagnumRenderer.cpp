@@ -3,6 +3,7 @@
 #include <Magnum/GL/DefaultFramebuffer.h>
 #include <Magnum/GL/Renderer.h>
 #include <Magnum/Math/Color.h>
+#include <Magnum/Math/Matrix4.h>
 
 namespace {
 
@@ -30,6 +31,7 @@ MagnumRenderer::MagnumRenderer(const Arguments &arguments)
       _playerRenderer(_shader),
       _shader3D(),
       _camera3D(),
+      _planetCameraController(),
       _mapRenderer3D(_shader3D)
 {
     configureRenderer();
@@ -92,4 +94,68 @@ void MagnumRenderer::drawEvent()
 void MagnumRenderer::viewportEvent(ViewportEvent &event)
 {
     Magnum::GL::defaultFramebuffer.setViewport({{}, event.framebufferSize()});
+}
+
+bool MagnumRenderer::handleKeyRotation(KeyEvent &event)
+{
+    if (event.key() == Key::Left)
+        return _planetCameraController.rotateLeft(_camera3D);
+
+    if (event.key() == Key::Right)
+        return _planetCameraController.rotateRight(_camera3D);
+
+    if (event.key() == Key::Up)
+        return _planetCameraController.rotateUp(_camera3D);
+
+    if (event.key() == Key::Down)
+        return _planetCameraController.rotateDown(_camera3D);
+
+    if (event.key() == Key::R)
+        return _planetCameraController.reset(_camera3D);
+
+    return false;
+}
+
+void MagnumRenderer::keyPressEvent(KeyEvent &event)
+{
+    if (!handleKeyRotation(event))
+        return;
+
+    event.setAccepted();
+    redrawAfterInput();
+}
+
+void MagnumRenderer::pointerPressEvent(PointerEvent &event)
+{
+    if (!event.isPrimary())
+        return;
+
+    _planetCameraController.startDrag();
+    event.setAccepted();
+}
+
+void MagnumRenderer::pointerReleaseEvent(PointerEvent &event)
+{
+    if (!event.isPrimary())
+        return;
+
+    _planetCameraController.stopDrag();
+    event.setAccepted();
+}
+
+void MagnumRenderer::pointerMoveEvent(PointerMoveEvent &event)
+{
+    if (!_planetCameraController.applyMouseDrag(
+            _camera3D,
+            event.relativePosition()
+        ))
+        return;
+
+    event.setAccepted();
+    redrawAfterInput();
+}
+
+void MagnumRenderer::redrawAfterInput()
+{
+    redraw();
 }
