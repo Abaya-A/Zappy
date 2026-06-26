@@ -33,7 +33,8 @@ MagnumRenderer::MagnumRenderer(const Arguments &arguments)
       _camera3D(),
       _planetCameraController(),
       _mapRenderer3D(_shader3D),
-      _resourceModelRenderer3D(_shader3D)
+      _resourceModelRenderer3D(_shader3D),
+      _eggModelRenderer3D(_shader3D)
 {
     configureRenderer();
 }
@@ -81,6 +82,7 @@ void MagnumRenderer::draw3DMap()
 
     _mapRenderer3D.draw(*_state, projection);
     _resourceModelRenderer3D.draw(*_state, projection);
+    _eggModelRenderer3D.draw(*_state, projection);
 }
 
 void MagnumRenderer::drawEvent()

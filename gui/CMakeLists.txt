@@ -58,6 +58,8 @@ set(ZAPPY_GUI_SOURCES
     src/render/3d/ResourceModelRenderer3D.cpp
     src/render/3d/PlanetGeometry3D.cpp
     src/render/3d/MtlMaterialLoader3D.cpp
+
+    src/render/3d/EggModelRenderer3D.cpp
 )
 
 add_executable(zappy_gui

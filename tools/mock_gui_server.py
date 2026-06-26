@@ -6,6 +6,7 @@ import time
 HOST = "127.0.0.1"
 PORT = 4242
 
+KEEP_EGGS_VISIBLE = False
 
 def base_world_messages():
     return [
@@ -18,63 +19,52 @@ def base_world_messages():
 
 def resource_messages():
     return [
-        # Single-resource tiles on bottom row
-        "bct 0 0 1 0 0 0 0 0 0\n",  # food
-        "bct 1 0 0 1 0 0 0 0 0\n",  # linemate
-        "bct 2 0 0 0 1 0 0 0 0\n",  # deraumere
-        "bct 3 0 0 0 0 1 0 0 0\n",  # sibur
-        "bct 4 0 0 0 0 0 1 0 0\n",  # mendiane
-        "bct 5 0 0 0 0 0 0 1 0\n",  # phiras
-        "bct 6 0 0 0 0 0 0 0 1\n",  # thystame
-
-        # All resources on one tile
+        "bct 0 0 1 0 0 0 0 0 0\n",
+        "bct 1 0 0 1 0 0 0 0 0\n",
+        "bct 2 0 0 0 1 0 0 0 0\n",
+        "bct 3 0 0 0 0 1 0 0 0\n",
+        "bct 4 0 0 0 0 0 1 0 0\n",
+        "bct 5 0 0 0 0 0 0 1 0\n",
+        "bct 6 0 0 0 0 0 0 0 1\n",
         "bct 1 2 1 1 1 1 1 1 1\n",
-
-        # Larger quantities; renderer still draws one marker per resource type
         "bct 4 4 5 2 3 1 4 2 1\n",
     ]
 
 
 def entity_messages():
     return [
-        # Players
-        "pnw #1 2 3 1 1 teamA\n",  # player #1 starts level 1, north
-        "pnw #2 5 6 2 2 teamB\n",  # player #2 starts level 2, east
-
-        # Egg
+        "pnw #1 2 3 1 1 teamA\n",
+        "pnw #2 5 6 2 2 teamB\n",
         "enw #1 #1 4 4\n",
-
-        # Inventory
         "pin #1 2 3 10 1 0 0 0 0 0\n",
     ]
 
-def scenario_messages():
+
+def gameplay_messages():
     return [
-        # Move player #1, then broadcast and level up
         "ppo #1 3 3 2\n",
         "pbc #1 watch me level up\n",
         "plv #1 5\n",
-
-        # Player #2 also broadcasts before dying
         "pbc #2 broadcast before death\n",
-
-        # Incantation appears, then disappears
         "pic 3 3 2 #1 #2\n",
         "pie 3 3 1\n",
-
-        # Player #1 expels
         "pex #1\n",
+    ]
 
-        # Egg disappears
+
+def egg_lifecycle_messages():
+    if KEEP_EGGS_VISIBLE:
+        return []
+
+    return [
         "ebo #1\n",
+    ]
 
-        # Player #2 disappears
+
+def cleanup_messages():
+    return [
         "pdi #2\n",
-
-        # Player #1 broadcasts again after other events
         "pbc #1 hello from mock server\n",
-
-        # Remaining protocol coverage
         "pfk #1\n",
         "pdr #1 0\n",
         "pgt #1 1\n",
@@ -82,10 +72,17 @@ def scenario_messages():
         "smg server maintenance soon\n",
         "suc\n",
         "sbp\n",
-
-        # End game
         "seg teamA\n",
     ]
+
+
+def scenario_messages():
+    return (
+        gameplay_messages()
+        + egg_lifecycle_messages()
+        + cleanup_messages()
+    )
+
 
 def message_delay(message):
     if message.startswith("pic "):
@@ -109,6 +106,7 @@ def message_delay(message):
     if message.startswith("seg "):
         return 2.0
     return 0.3
+
 
 def build_messages():
     return (
@@ -143,6 +141,8 @@ def run_server():
         server.listen(1)
 
         print(f"Mock GUI server listening on {HOST}:{PORT}")
+        print(f"KEEP_EGGS_VISIBLE={KEEP_EGGS_VISIBLE}")
+
         conn, addr = server.accept()
 
         with conn:
