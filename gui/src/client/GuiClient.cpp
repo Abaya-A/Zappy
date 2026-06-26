@@ -35,8 +35,8 @@ void GuiClient::run()
 
         _state.updateVisualEffects();
 
-        _renderer.handleEvents();
         _renderer.render(_state);
+        _renderer.handleEvents();
 
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }

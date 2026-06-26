@@ -22,7 +22,10 @@ MagnumRenderer::MagnumRenderer(const Arguments &arguments)
       _broadcastRenderer(_shader),
       _expulsionRenderer(_shader),
       _eggRenderer(_shader),
-      _playerRenderer(_shader)
+      _playerRenderer(_shader),
+      _shader3D(),
+      _camera3D(),
+      _mapRenderer3D(_shader3D)
 {
     Magnum::GL::Renderer::setClearColor(Magnum::Color4{0.06f, 0.06f, 0.09f, 1.0f});
 }
@@ -48,16 +51,11 @@ void MagnumRenderer::drawEvent()
     Magnum::GL::defaultFramebuffer.clear(Magnum::GL::FramebufferClear::Color);
 
     if (_state != nullptr && _state->isReady()) {
-        const Magnum::Matrix3 projection =
-            _camera.projection(_state->width(), _state->height(), framebufferSize());
 
-        _mapRenderer.draw(*_state, projection);
-        _resourceRenderer.draw(*_state, projection);
-        _incantationRenderer.draw(*_state, projection);
-        _broadcastRenderer.draw(*_state, projection);
-        _expulsionRenderer.draw(*_state, projection);
-        _eggRenderer.draw(*_state, projection);
-        _playerRenderer.draw(*_state, projection);
+        const Magnum::Matrix4 projection3D =
+            _camera3D.projection(_state->width(), _state->height(), framebufferSize());
+
+        _mapRenderer3D.draw(*_state, projection3D);
     }
 
     swapBuffers();
