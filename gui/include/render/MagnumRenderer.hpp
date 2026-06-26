@@ -1,6 +1,7 @@
 #pragma once
 
 #include "render/3d/MapRenderer3D.hpp"
+#include "render/3d/PlanetCameraController.hpp"
 #include "render/3d/RenderCamera3D.hpp"
 #include "render/BroadcastRenderer.hpp"
 #include "render/EggRenderer.hpp"
@@ -26,17 +27,23 @@ public:
 private:
     void drawEvent() override;
     void viewportEvent(ViewportEvent &event) override;
+    void keyPressEvent(KeyEvent &event) override;
+    void pointerPressEvent(PointerEvent &event) override;
+    void pointerReleaseEvent(PointerEvent &event) override;
+    void pointerMoveEvent(PointerMoveEvent &event) override;
 
     void configureRenderer();
     void clearFrame();
     bool canRender() const;
+    
     void draw3DMap();
+    bool handleKeyRotation(KeyEvent &event);
+    void redrawAfterInput();
 
     const GameState *_state;
     bool _isOpen;
 
     Magnum::Shaders::FlatGL2D _shader;
-
     zappy::render::RenderCamera _camera;
     zappy::render::MapRenderer _mapRenderer;
     zappy::render::ResourceRenderer _resourceRenderer;
@@ -48,5 +55,6 @@ private:
 
     Magnum::Shaders::FlatGL3D _shader3D;
     zappy::render3d::RenderCamera3D _camera3D;
+    zappy::render3d::PlanetCameraController _planetCameraController;
     zappy::render3d::MapRenderer3D _mapRenderer3D;
 };
