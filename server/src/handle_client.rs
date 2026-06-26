@@ -77,6 +77,7 @@ pub fn handle_client(token: Token, server: &mut Server) -> Result<(), std::io::E
 fn handle_handshake(token: Token, server: &mut Server, team: String) {
     let valid_team = server.params.teams_names.contains(&team) || team == "GRAPHIC";
     let available_clients_slots = server.params.team_clients_nb - server.clients.len() as u32;
+    // let (rand_x, rand_y) = (0, 0);
 
     if valid_team {
         if team == "GRAPHIC" {
