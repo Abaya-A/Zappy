@@ -15,11 +15,29 @@ void ModelRenderer3D::draw(
     const Model3D &model,
     const Magnum::Matrix4 &projection,
     const Magnum::Matrix4 &transform,
-    const Magnum::Color4 &color
+    const Magnum::Color4 &fallbackColor
 )
 {
     if (!model.isValid())
         return;
+
+    if (!model.subMeshes().empty()) {
+        for (const ModelSubMesh3D &subMesh : model.subMeshes()) {
+            if (subMesh.vertices.empty())
+                continue;
+
+            Magnum::GL::Mesh mesh = RenderMeshFactory3D::build(
+                MeshPrimitive3D::Triangles,
+                subMesh.vertices
+            );
+
+            _shader
+                .setTransformationProjectionMatrix(projection * transform)
+                .setColor(subMesh.color)
+                .draw(mesh);
+        }
+        return;
+    }
 
     Magnum::GL::Mesh mesh = RenderMeshFactory3D::build(
         MeshPrimitive3D::Triangles,
@@ -28,7 +46,7 @@ void ModelRenderer3D::draw(
 
     _shader
         .setTransformationProjectionMatrix(projection * transform)
-        .setColor(color)
+        .setColor(fallbackColor)
         .draw(mesh);
 }
 
