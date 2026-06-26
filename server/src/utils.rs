@@ -45,6 +45,13 @@ pub struct Player
     pub inventory: HashMap<String, u32>,
 }
 
+pub struct Egg
+{
+    pub team: String,
+    pub x: u32,
+    pub y: u32,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Direction
 {
@@ -72,6 +79,7 @@ pub struct Tile {
 
 pub struct World {
     pub tiles: Vec<Vec<Tile>>,
+    pub eggs: Vec<Egg>,
 }
 
 pub fn send_response(stream: &mut TcpStream, msg: &str) -> std::io::Result<()> {

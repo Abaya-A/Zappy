@@ -4,3 +4,11 @@
  *
  *  Copyright (c) 2026 Jules Nourdin
  */
+
+use mio::Token;
+use crate::utils::{Server, send_response};
+
+pub fn cmd_eject(token: Token, server: &mut Server)
+{
+
+}

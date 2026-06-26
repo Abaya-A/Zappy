@@ -77,8 +77,6 @@ pub fn handle_client(token: Token, server: &mut Server) -> Result<(), std::io::E
 fn handle_handshake(token: Token, server: &mut Server, team: String) {
     let valid_team = server.params.teams_names.contains(&team) || team == "GRAPHIC";
     let available_clients_slots = server.params.team_clients_nb - server.clients.len() as u32;
-    let rand_x = token.0 as u32 % server.params.width;
-    let rand_y = token.0 as u32 % server.params.height;
 
     if valid_team {
         if team == "GRAPHIC" {
@@ -106,7 +104,23 @@ fn handle_handshake(token: Token, server: &mut Server, team: String) {
                 let _ = utils::send_response(&mut client.stream, &existing_players);
             }
         } else {
+            let egg_pos = server.world.eggs.iter().position(|e| e.team == team);
+            let (rand_x, rand_y) = match egg_pos {
+                Some(i) => {
+                    let egg = server.world.eggs.remove(i);
+                    (egg.x, egg.y)
+                }
+                None => {
+                    // if dont have egg
+                    let seed = std::time::SystemTime::now()
+                        .duration_since(std::time::SystemTime::UNIX_EPOCH)
+                        .unwrap().subsec_nanos();
+                    (seed % server.params.width, (seed / server.params.width) % server.params.height)
+                }
+            };
+
             let client = server.clients.get_mut(&token).unwrap();
+
             client.team_name = Some(team.clone());
             client.player = Some(utils::Player {
                 x: rand_x,
@@ -117,12 +131,8 @@ fn handle_handshake(token: Token, server: &mut Server, team: String) {
                 inventory: std::collections::HashMap::new(),
             });
 
-            // Add player to the world tile
-            let py = rand_y as usize;
-            let px = rand_x as usize;
-            if py < server.world.tiles.len() && px < server.world.tiles[py].len() {
-                server.world.tiles[py][px].players.push(token);
-            }
+            // save player pos for eject and look
+            server.world.tiles[rand_y as usize][rand_x as usize].players.push(token);
 
             let res = format!("{}\n{} {}\n", available_clients_slots, server.params.width, server.params.height);
             let _ = utils::send_response(&mut client.stream, &res);
