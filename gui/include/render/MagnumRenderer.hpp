@@ -31,15 +31,18 @@ private:
     void pointerPressEvent(PointerEvent &event) override;
     void pointerReleaseEvent(PointerEvent &event) override;
     void pointerMoveEvent(PointerMoveEvent &event) override;
+    void scrollEvent(ScrollEvent &event) override;
 
     void configureRenderer();
     void clearFrame();
     bool canRender() const;
-    
+
     void draw3DMap();
     bool handleKeyRotation(KeyEvent &event);
+    bool handleZoomKey(KeyEvent &event);
     void redrawAfterInput();
-
+    bool handleMouseSettingsKey(KeyEvent &event);
+    
     const GameState *_state;
     bool _isOpen;
 

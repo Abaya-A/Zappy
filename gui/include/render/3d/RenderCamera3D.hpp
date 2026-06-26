@@ -16,11 +16,13 @@ public:
     ) const;
 
     void rotate(float yawDelta, float pitchDelta);
+    void zoom(float delta);
     void reset();
 
 private:
     float _yaw;
     float _pitch;
+    float _distanceScale;
 };
 
 }

@@ -116,9 +116,45 @@ bool MagnumRenderer::handleKeyRotation(KeyEvent &event)
     return false;
 }
 
+bool MagnumRenderer::handleZoomKey(KeyEvent &event)
+{
+    if (event.key() == Key::Plus || event.key() == Key::NumAdd)
+        return _planetCameraController.zoomIn(_camera3D);
+
+    if (event.key() == Key::Minus || event.key() == Key::NumSubtract)
+        return _planetCameraController.zoomOut(_camera3D);
+
+    return false;
+}
+
+void MagnumRenderer::scrollEvent(ScrollEvent &event)
+{
+    if (!_planetCameraController.applyWheelZoom(_camera3D, event.offset().y()))
+        return;
+
+    event.setAccepted();
+    redrawAfterInput();
+}
+
+bool MagnumRenderer::handleMouseSettingsKey(KeyEvent &event)
+{
+    if (event.key() == Key::X)
+        return _planetCameraController.toggleMouseInvertX();
+
+    if (event.key() == Key::Y)
+        return _planetCameraController.toggleMouseInvertY();
+
+    if (event.key() == Key::I)
+        return _planetCameraController.toggleMouseInvertBoth();
+
+    return false;
+}
+
 void MagnumRenderer::keyPressEvent(KeyEvent &event)
 {
-    if (!handleKeyRotation(event))
+    if (!handleKeyRotation(event) &&
+        !handleZoomKey(event) &&
+        !handleMouseSettingsKey(event))
         return;
 
     event.setAccepted();

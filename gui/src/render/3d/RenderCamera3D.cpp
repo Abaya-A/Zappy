@@ -11,7 +11,9 @@ namespace {
 
 constexpr float PlanetRadiusScale = 0.45f;
 constexpr float PlanetRadiusPadding = 2.0f;
-constexpr float CameraDistance = 5.2f;
+constexpr float DefaultDistanceScale = 5.2f;
+constexpr float MinDistanceScale = 2.4f;
+constexpr float MaxDistanceScale = 10.0f;
 constexpr float FieldOfView = 35.0f;
 constexpr float NearPlane = 0.1f;
 constexpr float FarPlaneMultiplier = 12.0f;
@@ -42,7 +44,8 @@ float computeAspectRatio(const Magnum::Vector2i &framebufferSize)
 
 RenderCamera3D::RenderCamera3D()
     : _yaw(DefaultYaw),
-      _pitch(DefaultPitch)
+      _pitch(DefaultPitch),
+      _distanceScale(DefaultDistanceScale)
 {
 }
 
@@ -53,9 +56,8 @@ Magnum::Matrix4 RenderCamera3D::projection(
 ) const
 {
     const float radius = computePlanetRadius(mapWidth, mapHeight);
-    const float distance = radius * CameraDistance;
+    const float distance = radius * _distanceScale;
     const float aspect = computeAspectRatio(framebufferSize);
-
     const float cosPitch = std::cos(_pitch);
 
     const Magnum::Vector3 center{0.0f, 0.0f, 0.0f};
@@ -90,10 +92,20 @@ void RenderCamera3D::rotate(float yawDelta, float pitchDelta)
     _pitch = std::clamp(_pitch + pitchDelta, MinPitch, MaxPitch);
 }
 
+void RenderCamera3D::zoom(float delta)
+{
+    _distanceScale = std::clamp(
+        _distanceScale + delta,
+        MinDistanceScale,
+        MaxDistanceScale
+    );
+}
+
 void RenderCamera3D::reset()
 {
     _yaw = DefaultYaw;
     _pitch = DefaultPitch;
+    _distanceScale = DefaultDistanceScale;
 }
 
 }

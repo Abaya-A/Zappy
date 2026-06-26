@@ -26,9 +26,49 @@ bool PlanetCameraController::rotateDown(RenderCamera3D &camera)
     return true;
 }
 
+bool PlanetCameraController::zoomIn(RenderCamera3D &camera)
+{
+    camera.zoom(-KeyboardZoomStep);
+    return true;
+}
+
+bool PlanetCameraController::zoomOut(RenderCamera3D &camera)
+{
+    camera.zoom(KeyboardZoomStep);
+    return true;
+}
+
+bool PlanetCameraController::applyWheelZoom(RenderCamera3D &camera, float wheelY)
+{
+    if (wheelY == 0.0f)
+        return false;
+
+    camera.zoom(-wheelY * WheelZoomStep);
+    return true;
+}
+
 bool PlanetCameraController::reset(RenderCamera3D &camera)
 {
     camera.reset();
+    return true;
+}
+
+bool PlanetCameraController::toggleMouseInvertX()
+{
+    _invertMouseX = !_invertMouseX;
+    return true;
+}
+
+bool PlanetCameraController::toggleMouseInvertY()
+{
+    _invertMouseY = !_invertMouseY;
+    return true;
+}
+
+bool PlanetCameraController::toggleMouseInvertBoth()
+{
+    _invertMouseX = !_invertMouseX;
+    _invertMouseY = !_invertMouseY;
     return true;
 }
 
@@ -57,11 +97,15 @@ bool PlanetCameraController::applyMouseDrag(
     if (!_isDragging)
         return false;
 
+    const float xDirection = _invertMouseX ? -1.0f : 1.0f;
+    const float yDirection = _invertMouseY ? -1.0f : 1.0f;
+
     camera.rotate(
-        -delta.x() * MouseRotationSensitivity,
-        -delta.y() * MouseRotationSensitivity
+        delta.x() * MouseRotationSensitivity * xDirection,
+        delta.y() * MouseRotationSensitivity * yDirection
     );
 
     return true;
 }
+
 }

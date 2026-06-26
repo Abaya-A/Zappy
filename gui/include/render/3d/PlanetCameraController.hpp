@@ -12,7 +12,14 @@ public:
     bool rotateRight(RenderCamera3D &camera);
     bool rotateUp(RenderCamera3D &camera);
     bool rotateDown(RenderCamera3D &camera);
+    bool zoomIn(RenderCamera3D &camera);
+    bool zoomOut(RenderCamera3D &camera);
+    bool applyWheelZoom(RenderCamera3D &camera, float wheelY);
     bool reset(RenderCamera3D &camera);
+
+    bool toggleMouseInvertX();
+    bool toggleMouseInvertY();
+    bool toggleMouseInvertBoth();
 
     bool startDrag();
     bool stopDrag();
@@ -23,8 +30,12 @@ public:
 private:
     static constexpr float KeyRotationStep = 0.08f;
     static constexpr float MouseRotationSensitivity = 0.005f;
+    static constexpr float KeyboardZoomStep = 0.35f;
+    static constexpr float WheelZoomStep = 0.45f;
 
     bool _isDragging = false;
+    bool _invertMouseX = false;
+    bool _invertMouseY = false;
 };
 
 }
