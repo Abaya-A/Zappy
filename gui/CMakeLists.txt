@@ -46,6 +46,11 @@ set(ZAPPY_GUI_SOURCES
     src/render/IncantationRenderer.cpp
     src/render/BroadcastRenderer.cpp
     src/render/ExpulsionRenderer.cpp
+
+    src/render/3d/RenderCamera3D.cpp
+    src/render/3d/RenderGeometry3D.cpp
+    src/render/3d/RenderMeshFactory3D.cpp
+    src/render/3d/MapRenderer3D.cpp
 )
 
 add_executable(zappy_gui
