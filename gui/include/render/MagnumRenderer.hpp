@@ -14,6 +14,7 @@
 #include "state/GameState.hpp"
 #include "render/3d/ResourceModelRenderer3D.hpp"
 #include "render/3d/EggModelRenderer3D.hpp"
+#include "render/3d/PlayerModelRenderer3D.hpp"
 
 #include <Magnum/Platform/Sdl2Application.h>
 #include <Magnum/Shaders/FlatGL.h>
@@ -64,4 +65,5 @@ private:
     zappy::render3d::MapRenderer3D _mapRenderer3D;
     zappy::render3d::ResourceModelRenderer3D _resourceModelRenderer3D;
     zappy::render3d::EggModelRenderer3D _eggModelRenderer3D;
+    zappy::render3d::PlayerModelRenderer3D _playerModelRenderer3D;
 };

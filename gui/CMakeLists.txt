@@ -10,7 +10,12 @@ find_package(Corrade REQUIRED Main)
 find_package(Magnum REQUIRED
     GL
     Shaders
+    Trade
     Sdl2Application
+)
+
+find_package(MagnumPlugins REQUIRED
+    GltfImporter
 )
 
 set(ZAPPY_GUI_SOURCES
@@ -58,8 +63,10 @@ set(ZAPPY_GUI_SOURCES
     src/render/3d/ResourceModelRenderer3D.cpp
     src/render/3d/PlanetGeometry3D.cpp
     src/render/3d/MtlMaterialLoader3D.cpp
+    src/render/3d/GltfModelLoader3D.cpp
 
     src/render/3d/EggModelRenderer3D.cpp
+    src/render/3d/PlayerModelRenderer3D.cpp
 )
 
 add_executable(zappy_gui
@@ -81,4 +88,6 @@ target_link_libraries(zappy_gui PRIVATE
     Magnum::Application
     Magnum::GL
     Magnum::Shaders
+    Magnum::Trade
+    MagnumPlugins::GltfImporter
 )
