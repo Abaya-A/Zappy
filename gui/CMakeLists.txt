@@ -6,16 +6,12 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-find_package(Corrade REQUIRED Main)
+find_package(Corrade REQUIRED Main PluginManager)
 find_package(Magnum REQUIRED
     GL
     Shaders
     Trade
     Sdl2Application
-)
-
-find_package(MagnumPlugins REQUIRED
-    GltfImporter
 )
 
 set(ZAPPY_GUI_SOURCES
@@ -85,9 +81,9 @@ target_compile_options(zappy_gui PRIVATE
 
 target_link_libraries(zappy_gui PRIVATE
     Corrade::Main
+    Corrade::PluginManager
     Magnum::Application
     Magnum::GL
     Magnum::Shaders
     Magnum::Trade
-    MagnumPlugins::GltfImporter
 )

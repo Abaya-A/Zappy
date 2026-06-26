@@ -1,16 +1,17 @@
 def parse_inventory(text):
-    result = {}
+    inventory = {}
 
     text = text.strip()
     text = text.removeprefix("[")
     text = text.removesuffix("]")
 
-    for part in text.split(","):
-        tokens = part.strip().split()
-        if len(tokens) == 2:
-            result[tokens[0]] = int(tokens[1])
+    for item in text.split(","):
+        parts = item.strip().split()
+        if len(parts) == 2:
+            name, count = parts
+            inventory[name] = int(count)
 
-    return result
+    return inventory
 
 def parse_look(text):
     text = text.strip()
@@ -18,9 +19,13 @@ def parse_look(text):
     text = text.removesuffix("]")
 
     tiles = []
+
     for tile in text.split(","):
         content = tile.strip()
-        tiles.append(content.split() if content else [])
+        if content:
+            tiles.append(content.split())
+        else:
+            tiles.append([])
 
     return tiles
         

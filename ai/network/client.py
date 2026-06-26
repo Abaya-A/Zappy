@@ -25,18 +25,15 @@ class ZappyClient:
         print(f"[AI] Connected: slots={client_num}, map={world_size}")
 
     def send_raw(self, text):
-        message = f"{text}\r\n"
+        self.file.write((text + "\n").encode())
         print(f"[AI -> SERVER] {text}")
-        self.sock.sendall(message.encode())
 
     def read_line(self):
         line = self.file.readline()
         if not line:
             raise RuntimeError("Server closed connection")
-
-        decoded = line.decode().strip()
-        print(f"[SERVER -> AI] {decoded}")  
-        return decoded
+        print(f"[SERVER -> AI] {line.decode().strip()}")
+        return line.decode().strip()
 
     def command(self, cmd):
         self.send_raw(cmd)

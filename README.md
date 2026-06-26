@@ -98,7 +98,7 @@ cd
 
 3. **Install the dependencies:**
 
-Dependencies are install with the AI Makefile.
+Dependencies are installed with the AI Makefile.
 
 ### Usage
 
