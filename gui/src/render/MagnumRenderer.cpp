@@ -5,20 +5,21 @@
 #include <Magnum/Math/Color.h>
 #include <Magnum/Math/Matrix3.h>
 #include <Magnum/Math/Matrix4.h>
+#include <Magnum/Math/Range.h>
 
 #include <algorithm>
+#include <optional>
 
 namespace {
 
 constexpr Magnum::Color4 ClearColor{0.06f, 0.06f, 0.09f, 1.0f};
 
-constexpr int MinimapWidth = 300;
-constexpr int MinimapHeight = 260;
-constexpr int MinimapMargin = 25;
-constexpr int MinimapInnerPadding = 12;
+constexpr int MinimapWidth = 350;
+constexpr int MinimapHeight = 350;
+constexpr int MinimapMargin = 5;
+constexpr int MinimapInnerPadding = 5;
 
 }
-
 MagnumRenderer::MagnumRenderer(const Arguments &arguments)
     : Magnum::Platform::Sdl2Application(
           arguments,
@@ -44,7 +45,10 @@ MagnumRenderer::MagnumRenderer(const Arguments &arguments)
       _mapRenderer3D(_shader3D),
       _resourceModelRenderer3D(_shader3D),
       _eggModelRenderer3D(_shader3D),
-      _playerModelRenderer3D(_shader3D)
+      _playerModelRenderer3D(_shader3D),
+      _selectedTileRenderer3D(_shader3D),
+      _tileSelection(),
+      _minimapTilePicker()
 {
     configureRenderer();
 }
@@ -117,6 +121,7 @@ void MagnumRenderer::drawMain3DView()
     _resourceModelRenderer3D.draw(*_state, projection);
     _eggModelRenderer3D.draw(*_state, projection);
     _playerModelRenderer3D.draw(*_state, projection);
+    _selectedTileRenderer3D.draw(*_state, projection, _tileSelection.selectedTile());
 }
 
 void MagnumRenderer::drawMinimapViewport()
@@ -146,22 +151,27 @@ void MagnumRenderer::drawMinimapViewport()
         std::max(1, minimapSize.y() - MinimapInnerPadding * 2)
     };
 
+    const Magnum::Matrix3 projection =
+        _camera.projection(_state->width(), _state->height(), innerSize);
+
+    _minimapTilePicker.setPickingArea(
+        Magnum::Range2Di::fromSize(innerPosition, innerSize),
+        projection
+    );
+
     Magnum::GL::defaultFramebuffer.setViewport({
         innerPosition,
         innerSize
     });
 
-    drawMinimapContent(innerSize);
+    drawMinimapContent(projection);
     restoreFullViewport();
 }
 
-void MagnumRenderer::drawMinimapContent(const Magnum::Vector2i &viewportSize)
+void MagnumRenderer::drawMinimapContent(const Magnum::Matrix3 &projection)
 {
     Magnum::GL::Renderer::disable(Magnum::GL::Renderer::Feature::DepthTest);
     Magnum::GL::Renderer::disable(Magnum::GL::Renderer::Feature::FaceCulling);
-
-    const Magnum::Matrix3 projection =
-        _camera.projection(_state->width(), _state->height(), viewportSize);
 
     _mapRenderer.draw(*_state, projection);
     _resourceRenderer.draw(*_state, projection);
@@ -260,10 +270,54 @@ void MagnumRenderer::scrollEvent(ScrollEvent &event)
     redrawAfterInput();
 }
 
+bool MagnumRenderer::handleMinimapSelection(const Magnum::Vector2i &position)
+{
+    if (!_showMinimap || _state == nullptr || !_state->isReady())
+        return false;
+
+    const std::optional<Magnum::Vector2i> tile =
+        _minimapTilePicker.pickTile(
+            position,
+            _state->width(),
+            _state->height()
+        );
+
+    if (!tile.has_value())
+        return false;
+
+    _tileSelection.select(tile.value());
+    return true;
+}
+
 void MagnumRenderer::pointerPressEvent(PointerEvent &event)
 {
     if (!event.isPrimary())
         return;
+
+    const Magnum::Vector2 pointer = event.position();
+    const Magnum::Vector2i fbSize = framebufferSize();
+    const Magnum::Vector2i winSize = windowSize();
+
+    const int framebufferX = static_cast<int>(
+        pointer.x() * static_cast<float>(fbSize.x()) /
+        static_cast<float>(winSize.x())
+    );
+
+    const int framebufferYFromTop = static_cast<int>(
+        pointer.y() * static_cast<float>(fbSize.y()) /
+        static_cast<float>(winSize.y())
+    );
+
+    const Magnum::Vector2i pointerPosition{
+        framebufferX,
+        fbSize.y() - framebufferYFromTop
+    };
+
+    if (handleMinimapSelection(pointerPosition)) {
+        event.setAccepted();
+        redrawAfterInput();
+        return;
+    }
 
     _planetCameraController.startDrag();
     event.setAccepted();

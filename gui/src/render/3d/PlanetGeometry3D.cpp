@@ -16,11 +16,6 @@ constexpr float TileCenterOffset = 0.5f;
 constexpr float PlanetRadiusScale = 0.45f;
 constexpr float PlanetRadiusPadding = 2.0f;
 
-/*
-** The 2D renderer displays X from left to right.
-** The spherical projection visually wraps longitude in the opposite direction,
-** so we mirror the normalized X coordinate here to keep 2D and 3D aligned.
-*/
 float normalizedMirroredTileCenter(float tileCoordinate, int mapSize)
 {
     return 1.0f -
@@ -53,10 +48,25 @@ Magnum::Vector3 PlanetGeometry3D::tileCenter(
     float surfaceLift
 )
 {
-    const float planetRadius = radius(mapWidth, mapHeight) + surfaceLift;
+    return surfacePoint(
+        tileX,
+        tileY,
+        mapWidth,
+        mapHeight,
+        surfaceLift
+    );
+}
 
+Magnum::Vector3 PlanetGeometry3D::surfacePoint(
+    float tileX,
+    float tileY,
+    int mapWidth,
+    int mapHeight,
+    float surfaceLift
+)
+{
     return spherePoint(
-        planetRadius,
+        radius(mapWidth, mapHeight) + surfaceLift,
         tileLongitude(tileX, mapWidth),
         tileLatitude(tileY, mapHeight)
     );
@@ -71,7 +81,7 @@ Magnum::Matrix4 PlanetGeometry3D::surfaceTransform(
     float scale
 )
 {
-    const Magnum::Vector3 position = tileCenter(
+    const Magnum::Vector3 position = surfacePoint(
         tileX,
         tileY,
         mapWidth,
