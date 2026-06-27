@@ -7,9 +7,14 @@ def parse_inventory(text):
 
     for item in text.split(","):
         parts = item.strip().split()
-        if len(parts) == 2:
-            name, count = parts
-            inventory[name] = int(count)
+
+        if len(parts) != 2:
+            continue
+        name, count = parts
+
+        if not count.isdigit():
+            continue
+        inventory[name] = int(count)
 
     return inventory
 

@@ -51,7 +51,7 @@ class Agent:
             print("Taking food")
             self.client.command("Take food")
             return
-
+        
         if goal.startswith("SEARCH_"):
             ressource = goal.replace("SEARCH_", "").lower()
             self.search_resource(ressource)
@@ -62,6 +62,7 @@ class Agent:
             return
 
         self.client.command("Forward")
+
     def search_resource(self, resource):
 
         current_tile = self.state.current_tile()
