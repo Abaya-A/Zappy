@@ -11,6 +11,7 @@ mod handle_client;
 mod handle_command;
 mod parser;
 mod server;
+mod timers;
 mod utils;
 
 fn main() {

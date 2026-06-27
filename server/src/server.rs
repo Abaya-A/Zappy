@@ -6,9 +6,12 @@
 */
 
 use crate::handle_client;
+use crate::timers::get_poll_timeout;
+use crate::timers::verify_player_hunger;
 use crate::utils::World;
 use crate::utils::Server;
 use crate::utils::ServerParams;
+use crate::timers;
 
 use mio::net::TcpListener;
 use mio::{Events, Interest, Poll, Token};
@@ -36,7 +39,8 @@ pub fn start_server(params: ServerParams) {
         .unwrap();
 
     loop {
-        if let Err(e) = poll.poll(&mut events, None) {
+        let timeout = get_poll_timeout(&mut server);
+        if let Err(e) = poll.poll(&mut events, timeout) {
             if e.kind() == std::io::ErrorKind::Interrupted {
                 continue;
             }
@@ -64,6 +68,8 @@ pub fn start_server(params: ServerParams) {
                         team_name: None,
                         player: None,
                         is_gui: false,
+                        action_deadline: None,
+                        hunger_check_deadline: timers::get_deadline(100),
                     };
 
                     server.clients.insert(token, client);
@@ -90,6 +96,7 @@ pub fn start_server(params: ServerParams) {
                 }
             }
         }
+        verify_player_hunger(&mut server);
     }
 }
 

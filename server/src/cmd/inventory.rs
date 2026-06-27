@@ -6,10 +6,16 @@
  */
 
 use mio::Token;
-use crate::utils::{Server, send_response};
+use crate::utils::{Server, send_result};
+use crate::timers;
 
 pub fn cmd_inventory(token: Token, server: &mut Server)
 {
+    if !timers::can_act(token, server) {
+        send_result(token, server, "ko");
+        return;
+    }
+
     let client = server.clients.get_mut(&token).unwrap();
     let player = client.player.as_ref().unwrap();
 
@@ -24,5 +30,6 @@ pub fn cmd_inventory(token: Token, server: &mut Server)
         player.inventory.get("thystame").unwrap_or(&0),
     );
 
-    let _ = send_response(&mut client.stream, &response);
+    send_result(token, server, &response.trim_end_matches('\n'));
+    timers::start_action(token, server, 1);
 }

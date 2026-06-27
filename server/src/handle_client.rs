@@ -76,11 +76,9 @@ pub fn handle_client(token: Token, server: &mut Server) -> Result<(), std::io::E
 
 fn handle_handshake(token: Token, server: &mut Server, team: String) {
     let valid_team = server.params.teams_names.contains(&team) || team == "GRAPHIC";
-    // let (rand_x, rand_y) = (0, 0);
 
     if valid_team {
         if team == "GRAPHIC" {
-            // First build existing players message
             let mut existing_players = String::new();
             for (t, c) in &server.clients {
                 if *t != token {
@@ -139,6 +137,7 @@ fn handle_handshake(token: Token, server: &mut Server, team: String) {
                 level: 1,
                 food: 10,
                 inventory: std::collections::HashMap::new(),
+                last_food_update: std::time::SystemTime::now(),
             });
 
             server.world.tiles[rand_y as usize][rand_x as usize].players.push(token);
