@@ -43,18 +43,16 @@ class Agent:
         print("Goal:", self.state.current_goal)
 
     def act(self):
-
         current_tile = self.state.current_tile()
         goal = self.state.current_goal
 
-        if "food" in current_tile:
-            print("Taking food")
-            self.client.command("Take food")
+        if current_tile:
+            self.collect_current_tile()
             return
-        
+
         if goal.startswith("SEARCH_"):
-            ressource = goal.replace("SEARCH_", "").lower()
-            self.search_resource(ressource)
+            resource = goal.replace("SEARCH_", "").lower()
+            self.search_resource(resource)
             return
 
         if goal == "LEVEL_UP":
@@ -112,3 +110,9 @@ class Agent:
         response = self.client.command("Incantation")
         print("Incantation:", response)
 
+    def collect_current_tile(self):
+        current_tile = self.state.current_tile()
+
+        for resource in current_tile:
+            print(f"Taking {resource}")
+            self.client.command(f"Take {resource}")
