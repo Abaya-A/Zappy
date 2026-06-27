@@ -7,6 +7,7 @@
 
 use mio::Token;
 use crate::utils::{Server, send_result};
+use crate::timers;
 
 fn broadcast_to_others(token: Token, server: &mut Server, msg: &str)
 {
@@ -24,8 +25,14 @@ fn broadcast_to_others(token: Token, server: &mut Server, msg: &str)
 
 pub fn cmd_broadcast(token: Token, server: &mut Server, msg: String)
 {
+    if !timers::can_act(token, server) {
+        send_result(token, server, "ko");
+        return;
+    }
+
     let formatted = format!("message 0, {}\n", msg);
 
     broadcast_to_others(token, server, &formatted);
     send_result(token, server, "ok");
+    timers::start_action(token, server, 7);
 }

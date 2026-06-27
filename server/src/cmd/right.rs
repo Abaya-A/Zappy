@@ -6,7 +6,8 @@
  */
 
 use mio::Token;
-use crate::utils::{Server, Player, Direction, send_response};
+use crate::utils::{Server, Player, Direction, send_result};
+use crate::timers;
 
 fn go_right(player: &mut Player)
 {
@@ -20,10 +21,16 @@ fn go_right(player: &mut Player)
 
 pub fn cmd_right(token: Token, server: &mut Server)
 {
+    if !timers::can_act(token, server) {
+        send_result(token, server, "ko");
+        return;
+    }
+
     let client = server.clients.get_mut(&token).unwrap();
     let player = client.player.as_mut().unwrap();
 
     go_right(player);
 
-    let _ = send_response(&mut client.stream, "ok\n");
+    send_result(token, server, "ok");
+    timers::start_action(token, server, 7);
 }
