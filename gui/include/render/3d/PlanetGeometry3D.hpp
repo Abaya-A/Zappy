@@ -14,7 +14,15 @@ public:
         float tileY,
         int mapWidth,
         int mapHeight,
-        float surfaceLift = 0.0f
+        float surfaceLift
+    );
+
+    static Magnum::Vector3 surfacePoint(
+        float tileX,
+        float tileY,
+        int mapWidth,
+        int mapHeight,
+        float surfaceLift
     );
 
     static Magnum::Matrix4 surfaceTransform(

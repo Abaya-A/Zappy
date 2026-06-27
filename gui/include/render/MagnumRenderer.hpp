@@ -5,15 +5,18 @@
 #include "render/ExpulsionRenderer.hpp"
 #include "render/IncantationRenderer.hpp"
 #include "render/MapRenderer.hpp"
+#include "render/MinimapTilePicker.hpp"
 #include "render/PlayerRenderer.hpp"
 #include "render/RenderCamera.hpp"
 #include "render/ResourceRenderer.hpp"
+#include "render/TileSelection.hpp"
 #include "render/3d/EggModelRenderer3D.hpp"
 #include "render/3d/MapRenderer3D.hpp"
 #include "render/3d/PlanetCameraController.hpp"
 #include "render/3d/PlayerModelRenderer3D.hpp"
 #include "render/3d/RenderCamera3D.hpp"
 #include "render/3d/ResourceModelRenderer3D.hpp"
+#include "render/3d/SelectedTileRenderer3D.hpp"
 #include "state/GameState.hpp"
 
 #include <Magnum/Math/Vector2.h>
@@ -44,13 +47,14 @@ private:
     void drawScene();
     void drawMain3DView();
     void drawMinimapViewport();
-    void drawMinimapContent(const Magnum::Vector2i &viewportSize);
+    void drawMinimapContent(const Magnum::Matrix3 &projection);
     void restoreFullViewport();
 
     bool handleKeyRotation(KeyEvent &event);
     bool handleZoomKey(KeyEvent &event);
     bool handleMouseSettingsKey(KeyEvent &event);
     bool handleMinimapKey(KeyEvent &event);
+    bool handleMinimapSelection(const Magnum::Vector2i &position);
 
     void redrawAfterInput();
 
@@ -75,4 +79,8 @@ private:
     zappy::render3d::ResourceModelRenderer3D _resourceModelRenderer3D;
     zappy::render3d::EggModelRenderer3D _eggModelRenderer3D;
     zappy::render3d::PlayerModelRenderer3D _playerModelRenderer3D;
+    zappy::render3d::SelectedTileRenderer3D _selectedTileRenderer3D;
+
+    zappy::render::TileSelection _tileSelection;
+    zappy::render::MinimapTilePicker _minimapTilePicker;
 };
