@@ -6,7 +6,7 @@
  */
 
 use mio::Token;
-use crate::utils::{Server, send_response, Direction};
+use crate::utils::{Direction, Server, format_ppo, send_response, notify_gui};
 
 fn get_player_infos(token: Token, server: &Server) -> (u32, u32, Direction)
 {
@@ -75,4 +75,13 @@ pub fn cmd_eject(token: Token, server: &mut Server)
 
     let client = server.clients.get_mut(&token).unwrap();
     let _ = send_response(&mut client.stream, "ok\n");
+
+    // notify gui
+    for other_token in &others {
+        let n = other_token.0 as u32;
+        let player = server.clients.get(other_token).unwrap().player.as_ref().unwrap();
+        let ppo = format_ppo(n, new_x, new_y, player);
+        notify_gui(&mut server.clients, &format!("pex #{}\n", n));
+        notify_gui(&mut server.clients, &ppo);
+    }
 }

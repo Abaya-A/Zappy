@@ -6,7 +6,7 @@
  */
 
 use mio::Token;
-use crate::utils::{Server, send_response, Direction, Player};
+use crate::utils::{Server, send_response, Direction, Player, notify_gui, format_ppo};
 
 fn go_left(player: &mut Player)
 {
@@ -25,5 +25,9 @@ pub fn cmd_left(token: Token, server: &mut Server)
 
     go_left(player);
 
+    let n = token.0 as u32;
     let _ = send_response(&mut client.stream, "ok\n");
+
+    let ppo = format_ppo(n, player.x, player.y, player);
+    notify_gui(&mut server.clients, &ppo);
 }

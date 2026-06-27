@@ -6,7 +6,7 @@
  */
 
 use mio::Token;
-use crate::utils::{Server, send_response};
+use crate::utils::{Server, send_response, format_pin, notify_gui};
 
 pub fn cmd_inventory(token: Token, server: &mut Server)
 {
@@ -25,4 +25,8 @@ pub fn cmd_inventory(token: Token, server: &mut Server)
     );
 
     let _ = send_response(&mut client.stream, &response);
+
+    let n = token.0 as u32;
+    let pin = format_pin(n, player);
+    notify_gui(&mut server.clients, &pin);
 }

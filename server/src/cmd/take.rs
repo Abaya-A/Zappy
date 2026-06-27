@@ -6,7 +6,7 @@
  */
 
 use mio::Token;
-use crate::utils::{Server, send_result};
+use crate::utils::{Server, send_result, notify_gui, resource_to_index};
 
 fn take_resource(server: &mut Server, x: usize, y: usize, resource: &str) -> bool
 {
@@ -24,21 +24,29 @@ fn take_resource(server: &mut Server, x: usize, y: usize, resource: &str) -> boo
 fn add_to_inventory(server: &mut Server, token: Token, resource: &str)
 {
     let client = server.clients.get_mut(&token).unwrap();
+    let player = client.player.as_mut().unwrap();
 
-    *client.player.as_mut().unwrap().inventory.entry(resource.to_string()).or_insert(0) += 1;
+    if resource == "food" {
+        player.food += 1;
+        return;
+    }
+
+    *player.inventory.entry(resource.to_string()).or_insert(0) += 1;
 }
 
 pub fn cmd_take(token: Token, server: &mut Server, obj: String)
 {
     // get pos player
-    let (x, y) = {
+    let (x, y, n) = {
         let player = server.clients.get(&token).unwrap().player.as_ref().unwrap();
-        (player.x as usize, player.y as usize)
+        (player.x as usize, player.y as usize, token.0 as u32)
     };
 
     if take_resource(server, x, y, &obj) {
         add_to_inventory(server, token, &obj);
         send_result(token, server, "ok");
+        let i = resource_to_index(&obj);
+        notify_gui(&mut server.clients, &format!("pgt #{} {}\n", n, i));
     } else {
         send_result(token, server, "ko");
     }
