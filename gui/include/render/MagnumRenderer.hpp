@@ -1,8 +1,5 @@
 #pragma once
 
-#include "render/3d/MapRenderer3D.hpp"
-#include "render/3d/PlanetCameraController.hpp"
-#include "render/3d/RenderCamera3D.hpp"
 #include "render/BroadcastRenderer.hpp"
 #include "render/EggRenderer.hpp"
 #include "render/ExpulsionRenderer.hpp"
@@ -11,11 +8,15 @@
 #include "render/PlayerRenderer.hpp"
 #include "render/RenderCamera.hpp"
 #include "render/ResourceRenderer.hpp"
-#include "state/GameState.hpp"
-#include "render/3d/ResourceModelRenderer3D.hpp"
 #include "render/3d/EggModelRenderer3D.hpp"
+#include "render/3d/MapRenderer3D.hpp"
+#include "render/3d/PlanetCameraController.hpp"
 #include "render/3d/PlayerModelRenderer3D.hpp"
+#include "render/3d/RenderCamera3D.hpp"
+#include "render/3d/ResourceModelRenderer3D.hpp"
+#include "state/GameState.hpp"
 
+#include <Magnum/Math/Vector2.h>
 #include <Magnum/Platform/Sdl2Application.h>
 #include <Magnum/Shaders/FlatGL.h>
 
@@ -40,14 +41,22 @@ private:
     void clearFrame();
     bool canRender() const;
 
-    void draw3DMap();
+    void drawScene();
+    void drawMain3DView();
+    void drawMinimapViewport();
+    void drawMinimapContent(const Magnum::Vector2i &viewportSize);
+    void restoreFullViewport();
+
     bool handleKeyRotation(KeyEvent &event);
     bool handleZoomKey(KeyEvent &event);
-    void redrawAfterInput();
     bool handleMouseSettingsKey(KeyEvent &event);
-    
+    bool handleMinimapKey(KeyEvent &event);
+
+    void redrawAfterInput();
+
     const GameState *_state;
     bool _isOpen;
+    bool _showMinimap;
 
     Magnum::Shaders::FlatGL2D _shader;
     zappy::render::RenderCamera _camera;

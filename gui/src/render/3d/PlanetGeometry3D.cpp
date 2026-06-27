@@ -9,16 +9,40 @@ namespace zappy::render3d {
 namespace {
 
 constexpr float Pi = 3.14159265358979323846f;
+constexpr float FullTurn = 2.0f * Pi;
+constexpr float HalfTurn = 0.5f * Pi;
+
+constexpr float TileCenterOffset = 0.5f;
 constexpr float PlanetRadiusScale = 0.45f;
 constexpr float PlanetRadiusPadding = 2.0f;
+
+/*
+** The 2D renderer displays X from left to right.
+** The spherical projection visually wraps longitude in the opposite direction,
+** so we mirror the normalized X coordinate here to keep 2D and 3D aligned.
+*/
+float normalizedMirroredTileCenter(float tileCoordinate, int mapSize)
+{
+    return 1.0f -
+        ((tileCoordinate + TileCenterOffset) / static_cast<float>(mapSize));
+}
+
+float normalizedTileCenter(float tileCoordinate, int mapSize)
+{
+    return (tileCoordinate + TileCenterOffset) / static_cast<float>(mapSize);
+}
+
+float largestMapAxis(int mapWidth, int mapHeight)
+{
+    return static_cast<float>(std::max(mapWidth, mapHeight));
+}
 
 }
 
 float PlanetGeometry3D::radius(int mapWidth, int mapHeight)
 {
-    const float mapSize = static_cast<float>(std::max(mapWidth, mapHeight));
-
-    return mapSize * PlanetRadiusScale + PlanetRadiusPadding;
+    return largestMapAxis(mapWidth, mapHeight) *
+        PlanetRadiusScale + PlanetRadiusPadding;
 }
 
 Magnum::Vector3 PlanetGeometry3D::tileCenter(
@@ -29,8 +53,10 @@ Magnum::Vector3 PlanetGeometry3D::tileCenter(
     float surfaceLift
 )
 {
+    const float planetRadius = radius(mapWidth, mapHeight) + surfaceLift;
+
     return spherePoint(
-        radius(mapWidth, mapHeight) + surfaceLift,
+        planetRadius,
         tileLongitude(tileX, mapWidth),
         tileLatitude(tileY, mapHeight)
     );
@@ -59,15 +85,12 @@ Magnum::Matrix4 PlanetGeometry3D::surfaceTransform(
 
 float PlanetGeometry3D::tileLongitude(float tileX, int mapWidth)
 {
-    return ((tileX + 0.5f) / static_cast<float>(mapWidth))
-        * 2.0f * Pi;
+    return normalizedMirroredTileCenter(tileX, mapWidth) * FullTurn;
 }
 
 float PlanetGeometry3D::tileLatitude(float tileY, int mapHeight)
 {
-    return -Pi * 0.5f
-        + ((tileY + 0.5f) / static_cast<float>(mapHeight))
-        * Pi;
+    return -HalfTurn + normalizedTileCenter(tileY, mapHeight) * Pi;
 }
 
 Magnum::Vector3 PlanetGeometry3D::spherePoint(
@@ -78,7 +101,7 @@ Magnum::Vector3 PlanetGeometry3D::spherePoint(
 {
     const float cosLatitude = std::cos(latitude);
 
-    return Magnum::Vector3{
+    return {
         radius * cosLatitude * std::cos(longitude),
         radius * std::sin(latitude),
         radius * cosLatitude * std::sin(longitude)

@@ -3,11 +3,19 @@
 #include <Magnum/GL/DefaultFramebuffer.h>
 #include <Magnum/GL/Renderer.h>
 #include <Magnum/Math/Color.h>
+#include <Magnum/Math/Matrix3.h>
 #include <Magnum/Math/Matrix4.h>
+
+#include <algorithm>
 
 namespace {
 
 constexpr Magnum::Color4 ClearColor{0.06f, 0.06f, 0.09f, 1.0f};
+
+constexpr int MinimapWidth = 300;
+constexpr int MinimapHeight = 260;
+constexpr int MinimapMargin = 25;
+constexpr int MinimapInnerPadding = 12;
 
 }
 
@@ -20,6 +28,7 @@ MagnumRenderer::MagnumRenderer(const Arguments &arguments)
       ),
       _state(nullptr),
       _isOpen(true),
+      _showMinimap(false),
       _shader(),
       _camera(),
       _mapRenderer(_shader),
@@ -76,8 +85,31 @@ bool MagnumRenderer::canRender() const
     return _state != nullptr && _state->isReady();
 }
 
-void MagnumRenderer::draw3DMap()
+void MagnumRenderer::drawEvent()
 {
+    clearFrame();
+
+    if (canRender())
+        drawScene();
+
+    swapBuffers();
+}
+
+void MagnumRenderer::drawScene()
+{
+    drawMain3DView();
+
+    if (_showMinimap)
+        drawMinimapViewport();
+}
+
+void MagnumRenderer::drawMain3DView()
+{
+    restoreFullViewport();
+
+    Magnum::GL::Renderer::enable(Magnum::GL::Renderer::Feature::DepthTest);
+    Magnum::GL::Renderer::enable(Magnum::GL::Renderer::Feature::FaceCulling);
+
     const Magnum::Matrix4 projection =
         _camera3D.projection(_state->width(), _state->height(), framebufferSize());
 
@@ -87,14 +119,65 @@ void MagnumRenderer::draw3DMap()
     _playerModelRenderer3D.draw(*_state, projection);
 }
 
-void MagnumRenderer::drawEvent()
+void MagnumRenderer::drawMinimapViewport()
 {
-    clearFrame();
+    const Magnum::Vector2i fullSize = framebufferSize();
 
-    if (canRender())
-        draw3DMap();
+    if (fullSize.x() <= 0 || fullSize.y() <= 0)
+        return;
 
-    swapBuffers();
+    const Magnum::Vector2i minimapSize{
+        std::min(MinimapWidth, fullSize.x()),
+        std::min(MinimapHeight, fullSize.y())
+    };
+
+    const Magnum::Vector2i minimapPosition{
+        MinimapMargin,
+        MinimapMargin
+    };
+
+    const Magnum::Vector2i innerPosition{
+        minimapPosition.x() + MinimapInnerPadding,
+        minimapPosition.y() + MinimapInnerPadding
+    };
+
+    const Magnum::Vector2i innerSize{
+        std::max(1, minimapSize.x() - MinimapInnerPadding * 2),
+        std::max(1, minimapSize.y() - MinimapInnerPadding * 2)
+    };
+
+    Magnum::GL::defaultFramebuffer.setViewport({
+        innerPosition,
+        innerSize
+    });
+
+    drawMinimapContent(innerSize);
+    restoreFullViewport();
+}
+
+void MagnumRenderer::drawMinimapContent(const Magnum::Vector2i &viewportSize)
+{
+    Magnum::GL::Renderer::disable(Magnum::GL::Renderer::Feature::DepthTest);
+    Magnum::GL::Renderer::disable(Magnum::GL::Renderer::Feature::FaceCulling);
+
+    const Magnum::Matrix3 projection =
+        _camera.projection(_state->width(), _state->height(), viewportSize);
+
+    _mapRenderer.draw(*_state, projection);
+    _resourceRenderer.draw(*_state, projection);
+    _eggRenderer.draw(*_state, projection);
+    _playerRenderer.draw(*_state, projection);
+    _incantationRenderer.draw(*_state, projection);
+    _broadcastRenderer.draw(*_state, projection);
+    _expulsionRenderer.draw(*_state, projection);
+
+    Magnum::GL::Renderer::enable(Magnum::GL::Renderer::Feature::DepthTest);
+    Magnum::GL::Renderer::enable(Magnum::GL::Renderer::Feature::FaceCulling);
+}
+
+void MagnumRenderer::restoreFullViewport()
+{
+    Magnum::GL::defaultFramebuffer.setViewport({{}, framebufferSize()});
 }
 
 void MagnumRenderer::viewportEvent(ViewportEvent &event)
@@ -133,15 +216,6 @@ bool MagnumRenderer::handleZoomKey(KeyEvent &event)
     return false;
 }
 
-void MagnumRenderer::scrollEvent(ScrollEvent &event)
-{
-    if (!_planetCameraController.applyWheelZoom(_camera3D, event.offset().y()))
-        return;
-
-    event.setAccepted();
-    redrawAfterInput();
-}
-
 bool MagnumRenderer::handleMouseSettingsKey(KeyEvent &event)
 {
     if (event.key() == Key::X)
@@ -156,11 +230,30 @@ bool MagnumRenderer::handleMouseSettingsKey(KeyEvent &event)
     return false;
 }
 
+bool MagnumRenderer::handleMinimapKey(KeyEvent &event)
+{
+    if (event.key() != Key::M)
+        return false;
+
+    _showMinimap = !_showMinimap;
+    return true;
+}
+
 void MagnumRenderer::keyPressEvent(KeyEvent &event)
 {
     if (!handleKeyRotation(event) &&
         !handleZoomKey(event) &&
-        !handleMouseSettingsKey(event))
+        !handleMouseSettingsKey(event) &&
+        !handleMinimapKey(event))
+        return;
+
+    event.setAccepted();
+    redrawAfterInput();
+}
+
+void MagnumRenderer::scrollEvent(ScrollEvent &event)
+{
+    if (!_planetCameraController.applyWheelZoom(_camera3D, event.offset().y()))
         return;
 
     event.setAccepted();
