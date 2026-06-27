@@ -76,7 +76,6 @@ pub fn handle_client(token: Token, server: &mut Server) -> Result<(), std::io::E
 
 fn handle_handshake(token: Token, server: &mut Server, team: String) {
     let valid_team = server.params.teams_names.contains(&team) || team == "GRAPHIC";
-    let available_clients_slots = server.params.team_clients_nb - server.clients.len() as u32;
     // let (rand_x, rand_y) = (0, 0);
 
     if valid_team {
@@ -105,6 +104,15 @@ fn handle_handshake(token: Token, server: &mut Server, team: String) {
                 let _ = utils::send_response(&mut client.stream, &existing_players);
             }
         } else {
+            if let Some(team_data) = server.teams.iter_mut().find(|t| t.name == team) {
+                if team_data.available_slots == 0 {
+                    let client = server.clients.get_mut(&token).unwrap();
+                    let _ = utils::send_response(&mut client.stream, "ko\n");
+                    return;
+                }
+                team_data.available_slots -= 1;
+            }
+
             let egg_pos = server.world.eggs.iter().position(|e| e.team == team);
             let (rand_x, rand_y) = match egg_pos {
                 Some(i) => {
@@ -112,13 +120,14 @@ fn handle_handshake(token: Token, server: &mut Server, team: String) {
                     (egg.x, egg.y)
                 }
                 None => {
-                    // if dont have egg
                     let seed = std::time::SystemTime::now()
                         .duration_since(std::time::SystemTime::UNIX_EPOCH)
                         .unwrap().subsec_nanos();
                     (seed % server.params.width, (seed / server.params.width) % server.params.height)
                 }
             };
+
+            let total_available_slots = server.teams.iter().find(|t| t.name == team).map(|t| t.available_slots).unwrap_or(0);
 
             let client = server.clients.get_mut(&token).unwrap();
 
@@ -132,13 +141,11 @@ fn handle_handshake(token: Token, server: &mut Server, team: String) {
                 inventory: std::collections::HashMap::new(),
             });
 
-            // save player pos for eject and look
             server.world.tiles[rand_y as usize][rand_x as usize].players.push(token);
 
-            let res = format!("{}\n{} {}\n", available_clients_slots, server.params.width, server.params.height);
+            let res = format!("{}\n{} {}\n", total_available_slots, server.params.width, server.params.height);
             let _ = utils::send_response(&mut client.stream, &res);
 
-            // Notify all GUI clients of the new player
             let pnw_msg = format!("pnw #{} {} {} {} 1 {}\n", token.0, rand_x, rand_y, utils::Direction::N.to_num(), team);
             utils::notify_gui(&mut server.clients, &pnw_msg);
         }

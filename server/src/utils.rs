@@ -10,7 +10,7 @@ use mio::net::TcpStream;
 use std::collections::HashMap;
 use std::io::Write;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ServerParams
 {
     pub port: u16,
@@ -21,6 +21,15 @@ pub struct ServerParams
     pub frequency: u32,
 }
 
+#[derive(Debug)]
+pub struct Server {
+    pub clients: HashMap<Token, Client>,
+    pub params: ServerParams,
+    pub world: World,
+    pub teams: Vec<Team>,
+}
+
+#[derive(Debug)]
 pub struct Client {
     pub stream: TcpStream,
     pub buffer: String,
@@ -29,12 +38,13 @@ pub struct Client {
     pub is_gui: bool,
 }
 
-pub struct Server {
-    pub clients: HashMap<Token, Client>,
-    pub params: ServerParams,
-    pub world: World,
+#[derive(Debug, Clone)]
+pub struct Team {
+    pub name: String,
+    pub available_slots: usize,
 }
 
+#[derive(Debug, Clone)]
 pub struct Player
 {
     pub x: u32,
@@ -45,11 +55,24 @@ pub struct Player
     pub inventory: HashMap<String, u32>,
 }
 
+#[derive(Debug)]
+pub struct World {
+    pub tiles: Vec<Vec<Tile>>,
+    pub eggs: Vec<Egg>,
+}
+
+#[derive(Debug)]
 pub struct Egg
 {
     pub team: String,
     pub x: u32,
     pub y: u32,
+}
+
+#[derive(Debug)]
+pub struct Tile {
+    pub players: Vec<Token>,
+    pub resources: HashMap<String, u32>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -72,18 +95,8 @@ impl Direction {
     }
 }
 
-pub struct Tile {
-    pub players: Vec<Token>,
-    pub resources: HashMap<String, u32>,
-}
-
-pub struct World {
-    pub tiles: Vec<Vec<Tile>>,
-    pub eggs: Vec<Egg>,
-}
-
-pub fn send_response(stream: &mut TcpStream, msg: &str) -> std::io::Result<()> {
-    stream.write_all(msg.as_bytes())
+pub fn send_response(stream: &mut TcpStream, response: &str) -> std::io::Result<()> {
+    stream.write_all(response.as_bytes())
 }
 
 pub fn notify_gui(clients: &mut HashMap<Token, Client>, msg: &str) {

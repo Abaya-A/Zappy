@@ -2,4 +2,8 @@ example_binaries
 zappy_server
 zappy_gui
 Magnum
+<<<<<<< HEAD
 zappy_ai
+=======
+.CONTEXT.md
+>>>>>>> 78aae82 (feat: cmd incantation and connect_nbr with all needed data structures modifications)

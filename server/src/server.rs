@@ -70,9 +70,22 @@ pub fn start_server(params: ServerParams) {
                     println!("New client: {}", client_addr);
                 }
                 token => {
+                    let client_exists = server.clients.contains_key(&token);
+                    if !client_exists {
+                        continue;
+                    }
                     if let Err(e) = handle_client::handle_client(token, &mut server) {
                         eprintln!("{}", e);
-                        std::process::exit(84);
+                        if let Some(client) = server.clients.remove(&token) {
+                            if let Some(team_name) = &client.team_name {
+                                if let Some(team) =
+                                    server.teams.iter_mut().find(|t| &t.name == team_name)
+                                {
+                                    team.available_slots += 1;
+                                }
+                            }
+                            let _ = client.stream.shutdown(std::net::Shutdown::Both);
+                        }
                     }
                 }
             }
@@ -102,13 +115,23 @@ fn init_world(params: &ServerParams) -> Server
         }
         tiles.push(row);
     }
- 
+
+    let teams = params
+        .teams_names
+        .iter()
+        .map(|name| crate::utils::Team {
+            name: name.clone(),
+            available_slots: params.team_clients_nb as usize,
+        })
+        .collect();
+
     let mut server = Server {
         clients: HashMap::new(),
         params: params.clone(),
         world: World { tiles, eggs },
+        teams,
     };
- 
+
     spawn_resources(&mut server);
     server
 }
