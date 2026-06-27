@@ -19,6 +19,9 @@
 #include "render/3d/SelectedTileRenderer3D.hpp"
 #include "state/GameState.hpp"
 #include "render/TileInfoPanelRenderer.hpp"
+#include "render/animation/IntroAnimation.hpp"
+
+#include <chrono>
 
 #include <Magnum/Math/Vector2.h>
 #include <Magnum/Platform/Sdl2Application.h>
@@ -60,6 +63,7 @@ private:
     bool handleMinimapSelection(const Magnum::Vector2i &position);
 
     void redrawAfterInput();
+    float frameDeltaSeconds();
 
     const GameState *_state;
     bool _isOpen;
@@ -75,6 +79,8 @@ private:
     zappy::render::EggRenderer _eggRenderer;
     zappy::render::PlayerRenderer _playerRenderer;
     zappy::render::TileInfoPanelRenderer _tileInfoPanelRenderer;
+    zappy::render::IntroAnimation _sphereIntroAnimation;
+    std::chrono::steady_clock::time_point _lastFrameTime;
 
     Magnum::Shaders::FlatGL3D _shader3D;
     zappy::render3d::RenderCamera3D _camera3D;

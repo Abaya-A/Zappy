@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <optional>
+#include <chrono>
 
 namespace {
 
@@ -27,31 +28,43 @@ MagnumRenderer::MagnumRenderer(const Arguments &arguments)
               .setTitle("Zappy GUI")
               .setSize({1280, 720})
       ),
-      _state(nullptr),
-      _isOpen(true),
-      _showMinimap(false),
-      _shader(),
-      _camera(),
-      _mapRenderer(_shader),
-      _resourceRenderer(_shader),
-      _incantationRenderer(_shader),
-      _broadcastRenderer(_shader),
-      _expulsionRenderer(_shader),
-      _eggRenderer(_shader),
-      _playerRenderer(_shader),
-      _tileInfoPanelRenderer(_shader),
-      _shader3D(),
-      _camera3D(),
-      _planetCameraController(),
-      _mapRenderer3D(_shader3D),
-      _resourceModelRenderer3D(_shader3D),
-      _eggModelRenderer3D(_shader3D),
-      _playerModelRenderer3D(_shader3D),
-      _selectedTileRenderer3D(_shader3D),
-      _tileSelection(),
-      _minimapTilePicker()
+        _state(nullptr),
+        _isOpen(true),
+        _showMinimap(false),
+        _shader(),
+        _camera(),
+        _mapRenderer(_shader),
+        _resourceRenderer(_shader),
+        _incantationRenderer(_shader),
+        _broadcastRenderer(_shader),
+        _expulsionRenderer(_shader),
+        _eggRenderer(_shader),
+        _playerRenderer(_shader),
+        _tileInfoPanelRenderer(_shader),
+        _sphereIntroAnimation(2.0f, 1.0f),
+        _lastFrameTime(std::chrono::steady_clock::now()),
+        _shader3D(),
+        _camera3D(),
+        _planetCameraController(),
+        _mapRenderer3D(_shader3D),
+        _resourceModelRenderer3D(_shader3D),
+        _eggModelRenderer3D(_shader3D),
+        _playerModelRenderer3D(_shader3D),
+        _selectedTileRenderer3D(_shader3D),
+        _tileSelection(),
+        _minimapTilePicker()
 {
     configureRenderer();
+}
+
+float MagnumRenderer::frameDeltaSeconds()
+{
+    const auto now = std::chrono::steady_clock::now();
+    const std::chrono::duration<float> elapsed = now - _lastFrameTime;
+
+    _lastFrameTime = now;
+
+    return std::clamp(elapsed.count(), 0.0f, 0.1f);
 }
 
 bool MagnumRenderer::isOpen() const
@@ -101,6 +114,10 @@ void MagnumRenderer::drawTileInfoPanel()
 
 void MagnumRenderer::drawEvent()
 {
+    const float deltaTime = frameDeltaSeconds();
+
+    _sphereIntroAnimation.update(deltaTime);
+
     clearFrame();
 
     if (canRender())
@@ -144,7 +161,13 @@ void MagnumRenderer::drawMain3DView()
     const Magnum::Matrix4 projection =
         _camera3D.projection(_state->width(), _state->height(), framebufferSize());
 
-    _mapRenderer3D.draw(*_state, projection);
+    const float introProgress = _sphereIntroAnimation.progress();
+
+    _mapRenderer3D.draw(*_state, projection, introProgress);
+
+    if (!_sphereIntroAnimation.finished())
+        return;
+
     _resourceModelRenderer3D.draw(*_state, projection);
     _eggModelRenderer3D.draw(*_state, projection);
     _playerModelRenderer3D.draw(*_state, projection);
