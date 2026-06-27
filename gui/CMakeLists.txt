@@ -58,6 +58,9 @@ set(ZAPPY_GUI_RENDER_2D_SOURCES
     src/render/ExpulsionRenderer.cpp
     src/render/TileSelection.cpp
     src/render/MinimapTilePicker.cpp
+    src/render/TileInfoPanelRenderer.cpp
+    src/render/HudNumberRenderer.cpp
+    src/render/HudIconRenderer.cpp
 )
 
 set(ZAPPY_GUI_RENDER_3D_SOURCES

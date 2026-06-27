@@ -18,6 +18,7 @@
 #include "render/3d/ResourceModelRenderer3D.hpp"
 #include "render/3d/SelectedTileRenderer3D.hpp"
 #include "state/GameState.hpp"
+#include "render/TileInfoPanelRenderer.hpp"
 
 #include <Magnum/Math/Vector2.h>
 #include <Magnum/Platform/Sdl2Application.h>
@@ -49,6 +50,8 @@ private:
     void drawMinimapViewport();
     void drawMinimapContent(const Magnum::Matrix3 &projection);
     void restoreFullViewport();
+    void drawTileInfoPanel();
+    bool handleTileInfoPanelClose(const Magnum::Vector2i &position);
 
     bool handleKeyRotation(KeyEvent &event);
     bool handleZoomKey(KeyEvent &event);
@@ -71,6 +74,7 @@ private:
     zappy::render::ExpulsionRenderer _expulsionRenderer;
     zappy::render::EggRenderer _eggRenderer;
     zappy::render::PlayerRenderer _playerRenderer;
+    zappy::render::TileInfoPanelRenderer _tileInfoPanelRenderer;
 
     Magnum::Shaders::FlatGL3D _shader3D;
     zappy::render3d::RenderCamera3D _camera3D;
