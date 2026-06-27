@@ -11,7 +11,7 @@ class MapRenderer3D {
 public:
     explicit MapRenderer3D(Magnum::Shaders::FlatGL3D &shader);
 
-    void draw(const GameState &state, const Magnum::Matrix4 &projection);
+    void draw(const GameState &state, const Magnum::Matrix4 &projection, float introProgress = 1.0f);
 
 private:
     Magnum::Shaders::FlatGL3D &_shader;

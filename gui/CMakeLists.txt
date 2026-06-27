@@ -6,7 +6,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-find_package(Corrade REQUIRED Main PluginManager)
+find_package(Corrade REQUIRED Main)
+
 find_package(Magnum REQUIRED
     GL
     Shaders
@@ -14,7 +15,11 @@ find_package(Magnum REQUIRED
     Sdl2Application
 )
 
-set(ZAPPY_GUI_SOURCES
+find_package(MagnumPlugins REQUIRED
+    GltfImporter
+)
+
+set(ZAPPY_GUI_CLIENT_SOURCES
     src/main.cpp
 
     src/client/GuiArgs.cpp
@@ -26,7 +31,9 @@ set(ZAPPY_GUI_SOURCES
     src/protocol/ProtocolCommand.cpp
     src/protocol/GuiProtocolDecoder.cpp
     src/protocol/GuiEventApplier.cpp
+)
 
+set(ZAPPY_GUI_STATE_SOURCES
     src/state/Resource.cpp
     src/state/Tile.cpp
     src/state/Egg.cpp
@@ -35,7 +42,9 @@ set(ZAPPY_GUI_SOURCES
     src/state/Broadcast.cpp
     src/state/Expulsion.cpp
     src/state/GameState.cpp
+)
 
+set(ZAPPY_GUI_RENDER_2D_SOURCES
     src/render/MagnumRenderer.cpp
     src/render/RenderCamera.cpp
     src/render/RenderGeometry.cpp
@@ -47,26 +56,51 @@ set(ZAPPY_GUI_SOURCES
     src/render/IncantationRenderer.cpp
     src/render/BroadcastRenderer.cpp
     src/render/ExpulsionRenderer.cpp
+    src/render/TileSelection.cpp
+    src/render/MinimapTilePicker.cpp
+    src/render/TileInfoPanelRenderer.cpp
+    src/render/HudNumberRenderer.cpp
+    src/render/HudIconRenderer.cpp
+)
 
+set(ZAPPY_GUI_RENDER_3D_SOURCES
     src/render/3d/RenderCamera3D.cpp
     src/render/3d/RenderGeometry3D.cpp
     src/render/3d/RenderMeshFactory3D.cpp
     src/render/3d/MapRenderer3D.cpp
     src/render/3d/PlanetCameraController.cpp
+    src/render/3d/PlanetGeometry3D.cpp
+
     src/render/3d/Model3D.cpp
     src/render/3d/ObjModelLoader3D.cpp
-    src/render/3d/ModelRenderer3D.cpp
-    src/render/3d/ResourceModelRenderer3D.cpp
-    src/render/3d/PlanetGeometry3D.cpp
     src/render/3d/MtlMaterialLoader3D.cpp
     src/render/3d/GltfModelLoader3D.cpp
+    src/render/3d/ModelRenderer3D.cpp
 
+    src/render/3d/ResourceModelRenderer3D.cpp
     src/render/3d/EggModelRenderer3D.cpp
     src/render/3d/PlayerModelRenderer3D.cpp
+    src/render/3d/SelectedTileRenderer3D.cpp
+
+    src/render/3d/SkinnedAnimation3D.cpp
+    src/render/3d/SkinnedShader3D.cpp
+    src/render/3d/SkinnedModelRenderer3D.cpp
+)
+
+set(ZAPPY_GUI_GLTF_SOURCES
+    src/render/3d/gltf/GltfMaterialLoader3D.cpp
+    src/render/3d/gltf/GltfMeshLoader3D.cpp
+    src/render/3d/gltf/GltfSkinLoader3D.cpp
+    src/render/3d/gltf/GltfSceneLoader3D.cpp
+    src/render/3d/gltf/GltfAnimationLoader3D.cpp
 )
 
 add_executable(zappy_gui
-    ${ZAPPY_GUI_SOURCES}
+    ${ZAPPY_GUI_CLIENT_SOURCES}
+    ${ZAPPY_GUI_STATE_SOURCES}
+    ${ZAPPY_GUI_RENDER_2D_SOURCES}
+    ${ZAPPY_GUI_RENDER_3D_SOURCES}
+    ${ZAPPY_GUI_GLTF_SOURCES}
 )
 
 target_include_directories(zappy_gui PRIVATE

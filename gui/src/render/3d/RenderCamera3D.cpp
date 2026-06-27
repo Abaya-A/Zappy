@@ -11,7 +11,7 @@ namespace {
 
 constexpr float PlanetRadiusScale = 0.45f;
 constexpr float PlanetRadiusPadding = 2.0f;
-constexpr float DefaultDistanceScale = 5.2f;
+constexpr float DefaultDistanceScale = 8.0f;
 constexpr float MinDistanceScale = 2.4f;
 constexpr float MaxDistanceScale = 10.0f;
 constexpr float FieldOfView = 35.0f;

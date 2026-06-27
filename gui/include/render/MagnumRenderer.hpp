@@ -1,21 +1,29 @@
 #pragma once
 
-#include "render/3d/MapRenderer3D.hpp"
-#include "render/3d/PlanetCameraController.hpp"
-#include "render/3d/RenderCamera3D.hpp"
 #include "render/BroadcastRenderer.hpp"
 #include "render/EggRenderer.hpp"
 #include "render/ExpulsionRenderer.hpp"
 #include "render/IncantationRenderer.hpp"
 #include "render/MapRenderer.hpp"
+#include "render/MinimapTilePicker.hpp"
 #include "render/PlayerRenderer.hpp"
 #include "render/RenderCamera.hpp"
 #include "render/ResourceRenderer.hpp"
-#include "state/GameState.hpp"
-#include "render/3d/ResourceModelRenderer3D.hpp"
+#include "render/TileSelection.hpp"
 #include "render/3d/EggModelRenderer3D.hpp"
+#include "render/3d/MapRenderer3D.hpp"
+#include "render/3d/PlanetCameraController.hpp"
 #include "render/3d/PlayerModelRenderer3D.hpp"
+#include "render/3d/RenderCamera3D.hpp"
+#include "render/3d/ResourceModelRenderer3D.hpp"
+#include "render/3d/SelectedTileRenderer3D.hpp"
+#include "state/GameState.hpp"
+#include "render/TileInfoPanelRenderer.hpp"
+#include "render/animation/IntroAnimation.hpp"
 
+#include <chrono>
+
+#include <Magnum/Math/Vector2.h>
 #include <Magnum/Platform/Sdl2Application.h>
 #include <Magnum/Shaders/FlatGL.h>
 
@@ -40,14 +48,26 @@ private:
     void clearFrame();
     bool canRender() const;
 
-    void draw3DMap();
+    void drawScene();
+    void drawMain3DView();
+    void drawMinimapViewport();
+    void drawMinimapContent(const Magnum::Matrix3 &projection);
+    void restoreFullViewport();
+    void drawTileInfoPanel();
+    bool handleTileInfoPanelClose(const Magnum::Vector2i &position);
+
     bool handleKeyRotation(KeyEvent &event);
     bool handleZoomKey(KeyEvent &event);
-    void redrawAfterInput();
     bool handleMouseSettingsKey(KeyEvent &event);
-    
+    bool handleMinimapKey(KeyEvent &event);
+    bool handleMinimapSelection(const Magnum::Vector2i &position);
+
+    void redrawAfterInput();
+    float frameDeltaSeconds();
+
     const GameState *_state;
     bool _isOpen;
+    bool _showMinimap;
 
     Magnum::Shaders::FlatGL2D _shader;
     zappy::render::RenderCamera _camera;
@@ -58,6 +78,9 @@ private:
     zappy::render::ExpulsionRenderer _expulsionRenderer;
     zappy::render::EggRenderer _eggRenderer;
     zappy::render::PlayerRenderer _playerRenderer;
+    zappy::render::TileInfoPanelRenderer _tileInfoPanelRenderer;
+    zappy::render::IntroAnimation _sphereIntroAnimation;
+    std::chrono::steady_clock::time_point _lastFrameTime;
 
     Magnum::Shaders::FlatGL3D _shader3D;
     zappy::render3d::RenderCamera3D _camera3D;
@@ -66,4 +89,8 @@ private:
     zappy::render3d::ResourceModelRenderer3D _resourceModelRenderer3D;
     zappy::render3d::EggModelRenderer3D _eggModelRenderer3D;
     zappy::render3d::PlayerModelRenderer3D _playerModelRenderer3D;
+    zappy::render3d::SelectedTileRenderer3D _selectedTileRenderer3D;
+
+    zappy::render::TileSelection _tileSelection;
+    zappy::render::MinimapTilePicker _minimapTilePicker;
 };

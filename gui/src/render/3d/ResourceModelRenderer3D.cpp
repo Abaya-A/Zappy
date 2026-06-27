@@ -14,8 +14,8 @@
 namespace zappy::render3d {
 namespace {
 
-constexpr float ModelSurfaceLift = 0.20f;
-constexpr float FoodModelScale = 1.0f;
+constexpr float ModelSurfaceLift = 0.15f;
+constexpr float FoodModelScale = 0.8f;
 
 constexpr Magnum::Color4 FoodFallbackColor{0.95f, 0.75f, 0.25f, 1.0f};
 
