@@ -39,6 +39,7 @@ MagnumRenderer::MagnumRenderer(const Arguments &arguments)
       _expulsionRenderer(_shader),
       _eggRenderer(_shader),
       _playerRenderer(_shader),
+      _tileInfoPanelRenderer(_shader),
       _shader3D(),
       _camera3D(),
       _planetCameraController(),
@@ -89,6 +90,15 @@ bool MagnumRenderer::canRender() const
     return _state != nullptr && _state->isReady();
 }
 
+void MagnumRenderer::drawTileInfoPanel()
+{
+    _tileInfoPanelRenderer.draw(
+        *_state,
+        _tileSelection.selectedTile(),
+        framebufferSize()
+    );
+}
+
 void MagnumRenderer::drawEvent()
 {
     clearFrame();
@@ -105,6 +115,23 @@ void MagnumRenderer::drawScene()
 
     if (_showMinimap)
         drawMinimapViewport();
+    
+    drawTileInfoPanel();
+}
+
+bool MagnumRenderer::handleTileInfoPanelClose(const Magnum::Vector2i &position)
+{
+    if (_state == nullptr || !_state->isReady())
+        return false;
+
+    if (!_tileSelection.hasSelection())
+        return false;
+
+    if (!_tileInfoPanelRenderer.isCloseButtonAt(position, framebufferSize()))
+        return false;
+
+    _tileSelection.clear();
+    return true;
 }
 
 void MagnumRenderer::drawMain3DView()
@@ -314,6 +341,12 @@ void MagnumRenderer::pointerPressEvent(PointerEvent &event)
     };
 
     if (handleMinimapSelection(pointerPosition)) {
+        event.setAccepted();
+        redrawAfterInput();
+        return;
+    }
+
+    if (handleTileInfoPanelClose(pointerPosition)) {
         event.setAccepted();
         redrawAfterInput();
         return;
