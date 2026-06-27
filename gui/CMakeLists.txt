@@ -67,6 +67,15 @@ set(ZAPPY_GUI_SOURCES
 
     src/render/3d/EggModelRenderer3D.cpp
     src/render/3d/PlayerModelRenderer3D.cpp
+    src/render/3d/SkinnedAnimation3D.cpp
+    src/render/3d/SkinnedShader3D.cpp
+    src/render/3d/SkinnedModelRenderer3D.cpp
+
+    src/render/3d/gltf/GltfMaterialLoader3D.cpp
+    src/render/3d/gltf/GltfMeshLoader3D.cpp
+    src/render/3d/gltf/GltfSkinLoader3D.cpp
+    src/render/3d/gltf/GltfSceneLoader3D.cpp
+    src/render/3d/gltf/GltfAnimationLoader3D.cpp
 )
 
 add_executable(zappy_gui

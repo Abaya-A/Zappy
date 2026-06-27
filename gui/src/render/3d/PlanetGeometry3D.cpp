@@ -22,8 +22,8 @@ float PlanetGeometry3D::radius(int mapWidth, int mapHeight)
 }
 
 Magnum::Vector3 PlanetGeometry3D::tileCenter(
-    int tileX,
-    int tileY,
+    float tileX,
+    float tileY,
     int mapWidth,
     int mapHeight,
     float surfaceLift
@@ -37,8 +37,8 @@ Magnum::Vector3 PlanetGeometry3D::tileCenter(
 }
 
 Magnum::Matrix4 PlanetGeometry3D::surfaceTransform(
-    int tileX,
-    int tileY,
+    float tileX,
+    float tileY,
     int mapWidth,
     int mapHeight,
     float surfaceLift,
@@ -57,16 +57,16 @@ Magnum::Matrix4 PlanetGeometry3D::surfaceTransform(
         Magnum::Matrix4::scaling(Magnum::Vector3{scale});
 }
 
-float PlanetGeometry3D::tileLongitude(int tileX, int mapWidth)
+float PlanetGeometry3D::tileLongitude(float tileX, int mapWidth)
 {
-    return ((static_cast<float>(tileX) + 0.5f) / static_cast<float>(mapWidth))
+    return ((tileX + 0.5f) / static_cast<float>(mapWidth))
         * 2.0f * Pi;
 }
 
-float PlanetGeometry3D::tileLatitude(int tileY, int mapHeight)
+float PlanetGeometry3D::tileLatitude(float tileY, int mapHeight)
 {
     return -Pi * 0.5f
-        + ((static_cast<float>(tileY) + 0.5f) / static_cast<float>(mapHeight))
+        + ((tileY + 0.5f) / static_cast<float>(mapHeight))
         * Pi;
 }
 

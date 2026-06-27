@@ -10,16 +10,16 @@ public:
     static float radius(int mapWidth, int mapHeight);
 
     static Magnum::Vector3 tileCenter(
-        int tileX,
-        int tileY,
+        float tileX,
+        float tileY,
         int mapWidth,
         int mapHeight,
         float surfaceLift = 0.0f
     );
 
     static Magnum::Matrix4 surfaceTransform(
-        int tileX,
-        int tileY,
+        float tileX,
+        float tileY,
         int mapWidth,
         int mapHeight,
         float surfaceLift,
@@ -27,8 +27,8 @@ public:
     );
 
 private:
-    static float tileLongitude(int tileX, int mapWidth);
-    static float tileLatitude(int tileY, int mapHeight);
+    static float tileLongitude(float tileX, int mapWidth);
+    static float tileLatitude(float tileY, int mapHeight);
 
     static Magnum::Vector3 spherePoint(
         float radius,
