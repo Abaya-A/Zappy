@@ -9,6 +9,7 @@ use mio::Token;
 use mio::net::TcpStream;
 use std::collections::HashMap;
 use std::io::Write;
+use std::time::SystemTime;
 
 #[derive(Clone, Debug)]
 pub struct ServerParams
@@ -36,6 +37,8 @@ pub struct Client {
     pub team_name: Option<String>,
     pub player: Option<Player>,
     pub is_gui: bool,
+    pub action_deadline: Option<SystemTime>,
+    pub hunger_check_deadline: SystemTime,
 }
 
 #[derive(Debug, Clone)]
@@ -53,6 +56,7 @@ pub struct Player
     pub level: u32,
     pub food: u32,
     pub inventory: HashMap<String, u32>,
+    pub last_food_update: SystemTime,
 }
 
 #[derive(Debug)]
@@ -91,18 +95,6 @@ impl Direction {
             Direction::E => 2,
             Direction::S => 3,
             Direction::W => 4,
-        }
-    }
-}
-
-pub fn send_response(stream: &mut TcpStream, response: &str) -> std::io::Result<()> {
-    stream.write_all(response.as_bytes())
-}
-
-pub fn notify_gui(clients: &mut HashMap<Token, Client>, msg: &str) {
-    for client in clients.values_mut() {
-        if client.is_gui {
-            let _ = send_response(&mut client.stream, msg);
         }
     }
 }
@@ -151,8 +143,19 @@ pub fn format_pin(n: u32, player: &Player) -> String {
     )
 }
 
-pub fn send_result(token: Token, server: &mut Server, state: &str)
-{
+pub fn send_response(stream: &mut TcpStream, response: &str) -> std::io::Result<()> {
+    stream.write_all(response.as_bytes())
+}
+
+pub fn send_result(token: Token, server: &mut Server, state: &str) {
     let client = server.clients.get_mut(&token).unwrap();
     let _ = send_response(&mut client.stream, &format!("{state}\n"));
+}
+
+pub fn notify_gui(clients: &mut HashMap<Token, Client>, msg: &str) {
+    for client in clients.values_mut() {
+        if client.is_gui {
+            let _ = send_response(&mut client.stream, msg);
+        }
+    }
 }

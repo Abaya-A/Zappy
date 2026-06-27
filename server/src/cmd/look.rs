@@ -7,6 +7,7 @@
 
 use mio::Token;
 use crate::utils::{Server, Direction, send_result};
+use crate::timers;
 
 fn get_player(token: Token, server: &Server) -> (u32, u32, Direction)
 {
@@ -86,14 +87,19 @@ fn format_str(server: &Server, vision: &Vec<Vec<(u32, u32)>>) -> String
     }
 
     result.push(']');
-    result.push('\n');
     result
 }
 
 pub fn cmd_look(token: Token, server: &mut Server)
 {
+    if !timers::can_act(token, server) {
+        send_result(token, server, "ko");
+        return;
+    }
+
     let looking = build_look(token, server);
     let response = format_str(server, &looking);
 
     send_result(token, server, &response);
+    timers::start_action(token, server, 7);
 }
