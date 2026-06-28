@@ -103,6 +103,7 @@ impl Direction {
 
 pub fn send_response(stream: &mut TcpStream, response: &str) -> std::io::Result<()>
 {
+    println!("[IA NOTIF] {}", response.trim_end());
     stream.write_all(response.as_bytes())
 }
 
@@ -113,7 +114,7 @@ pub fn notify_gui(clients: &mut HashMap<Token, Client>, msg: &str)
             let _ = send_response(&mut client.stream, msg);
         }
     }
-    println!("GUI notified: {}", msg);
+    println!("[GUI NOTIF] {}", msg);
 }
 
 pub fn format_bct(server: &Server, x: u32, y: u32) -> String {

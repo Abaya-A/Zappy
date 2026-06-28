@@ -6,6 +6,7 @@
  */
 
 use crate::utils::Server;
+use crate::utils::notify_gui;
 use crate::handle_command::{Command, GuiCommand};
 use std::time::{SystemTime, Duration};
 use mio::Token;
@@ -187,6 +188,38 @@ pub fn start_action(token: Token, server: &mut Server, action_units: u32) {
     }
 }
 
+fn handle_player_death(server: &mut Server, dead_token: Token)
+{
+    let Some(mut client) = server.clients.remove(&dead_token) else {
+        return;
+    };
+
+    // notif ia
+    println!("[DEATH] send dead to {:?}", dead_token);
+    let _ = crate::utils::send_response(&mut client.stream, "dead\n");
+    let _ = client.stream.shutdown(std::net::Shutdown::Both);
+
+    // clean map gui + notif gui
+    if let Some(player) = &client.player {
+        let px = player.x as usize;
+        let py = player.y as usize;
+
+        if py < server.world.tiles.len() && px < server.world.tiles[py].len() {
+            server.world.tiles[py][px].players.retain(|&t| t != dead_token);
+        }
+
+        let msg = format!("pdi #{}\n", dead_token.0);
+        crate::utils::notify_gui(&mut server.clients, &msg);
+    }
+
+    // del slot ekip
+    if let Some(team_name) = &client.team_name {
+        if let Some(team) = server.teams.iter_mut().find(|t| t.name == *team_name) {
+            team.available_slots += 1;
+        }
+    }
+}
+
 pub fn verify_player_hunger(server: &mut Server)
 {
     let now = SystemTime::now();
@@ -214,10 +247,7 @@ pub fn verify_player_hunger(server: &mut Server)
 
     }
     for dead_token in dead_players {
-        if let Some(mut client) = server.clients.remove(&dead_token) {
-            let _ = crate::utils::send_response(&mut client.stream, "dead\n");
-            let _ = client.stream.shutdown(std::net::Shutdown::Both);
-        }
+        handle_player_death(server, dead_token);
     }
 }
 
