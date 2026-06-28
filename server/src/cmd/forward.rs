@@ -6,7 +6,7 @@
  */
 
 use mio::Token;
-use crate::utils::{Direction, Server, send_result};
+use crate::utils::{Direction, Server, notify_gui, send_result, format_ppo};
 use crate::timers;
 
 fn get_movement(token: Token, server: &Server) -> (u32, u32, u32, u32)
@@ -44,12 +44,19 @@ pub fn cmd_forward(token: Token, server: &mut Server)
     }
 
     let (old_x, old_y, new_x, new_y) = get_movement(token, server);
-
+    
     server.world.tiles[old_y as usize][old_x as usize].players.retain(|&t| t != token);
     server.world.tiles[new_y as usize][new_x as usize].players.push(token);
-
+    
     update_player_position(token, server, new_x, new_y);
-
+    
     send_result(token, server, "ok");
     timers::start_action(token, server, 7);
+    
+    let n = token.0 as u32;
+    let client = server.clients.get(&token).unwrap();
+    let player = client.player.as_ref().unwrap();
+    
+    let ppo = format_ppo(n, player.x, player.y, player);
+    notify_gui(&mut server.clients, &ppo);
 }

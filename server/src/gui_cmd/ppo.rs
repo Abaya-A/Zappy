@@ -13,7 +13,7 @@ pub fn cmd_ppo(token: Token, server: &mut Server, n: u32) {
     for (t, c) in &server.clients {
         if t.0 as u32 == n {
             if let Some(player) = &c.player {
-                found = Some(crate::utils::format_ppo(n, player));
+                found = Some(crate::utils::format_ppo(n, player.x, player.y, player));
             }
             break;
         }
