@@ -12,17 +12,24 @@ RESOURCE_PRIORITY = [
 
 class State:
     def __init__(self):
-
         self.level = 1
+        self.role = "WORKER"
+
         self.inventory = {}
+
         self.visible_tiles = []
+
         self.current_goal = None
         self.last_broadcast = None
+
         self.players_on_tile = 1
         self.messages = []
         self.is_leader = False
         self.waiting_for_players = False
         self.broadcast_cooldown = 0
+        self.is_waiting_incantation = False
+
+        self.fork_cooldown = 0
 
     def food(self):
         return self.inventory.get("food", 0)

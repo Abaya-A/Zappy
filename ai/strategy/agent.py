@@ -1,13 +1,15 @@
-from ai.strategy.parser import parse_inventory, parse_look, parse_broadcast
-from ai.strategy.state import State
-from ai.strategy.vision import tile_to_position
+import random
 
+from ai.strategy.parser import *
+from ai.strategy.state import State
+from ai.strategy.actions import *
 
 class Agent:
 
     def __init__(self, client):
         self.client = client
         self.state = State()
+        self.state.role = random.choice(["WORKER", "COLLECTOR"])
 
     def run(self):
 
@@ -17,6 +19,9 @@ class Agent:
             self.observe()
             self.think()
             self.act()
+
+            if self.state.fork_cooldown > 0:
+                self.state.fork_cooldown -= 1
 
     def observe(self):
 
@@ -34,7 +39,8 @@ class Agent:
         print("Messages:", self.state.messages)
 
     def think(self):
-
+        
+        #Lire les messages
         for msg in self.state.messages:
             direction, content = parse_broadcast(msg)
             
@@ -44,16 +50,34 @@ class Agent:
                 self.state.messages.clear()
                 return
 
+        #Attend une incantation
+        if self.state.is_waiting_incantation:
+            self.state.current_goal = "WAIT_INCANTATION"
+            return
+
+        #Cherche nourriture si nécessaire
         if self.state.food() < 10:
             self.state.current_goal = "SEARCH_FOOD"
             return
 
-        resource = self.state.next_missing_resource()
+        #Rôle collector
+        if self.state.role == "COLLECTOR":
+            resource = self.state.next_missing_resource()
+            if resource:
+                self.state.current_goal = f"SEARCH_{resource.upper()}"
 
+        #Fork
+        if self.state.fork_cooldown <= 0 and self.state.food() > 20:
+            self.state.current_goal = "FORK"
+            return
+
+        #Ressources manquantes
+        resource = self.state.next_missing_resource()
         if resource:
             self.state.current_goal = f"SEARCH_{resource.upper()}"
             return
 
+        #Incantation
         required_players = self.state.requirements().get("players", 1)
         players_here = self.state.player_count_on_tile()
 
@@ -68,116 +92,29 @@ class Agent:
         current_tile = self.state.current_tile()
         goal = self.state.current_goal
 
-        if goal == "GATHER_PLAYERS":
-            self.follow_broadcast()
+        if goal == "WAIT_INCANTATION":
+            wait_incantation()
             return
 
+        if goal == "GATHER_PLAYERS":
+            follow_broadcast()
+            return
+        
         if current_tile:
-            self.collect_current_tile()
+            collect_current_tile()
+            return
+
+        if goal == "FORK":
+            fork()
             return
 
         if goal.startswith("SEARCH_"):
             resource = goal.replace("SEARCH_", "").lower()
-            self.search_resource(resource)
+            search_resource(resource)
             return
 
         if goal == "LEVEL_UP":
-            self.level_up()
+            level_up()
             return
 
         self.client.command("Forward")
-
-    def search_resource(self, resource):
-
-        current_tile = self.state.current_tile()
-
-        if resource in current_tile:
-            print(f"Taking {resource}")
-            self.client.command(f"Take {resource}")
-            return
-
-        tile_index = self.state.find_resource(resource)
-
-        if tile_index is not None:
-            print(f"Moving to {resource} at tile {tile_index}")
-            self.move_to_tile(tile_index)
-            return
-
-        self.client.command("Forward")
-
-    def move_to_tile(self, tile_index):
-        x, y = tile_to_position(tile_index)
-
-        if x < 0:
-            self.client.command("Left")
-        elif x > 0:
-            self.client.command("Right")
-
-        for _ in range(y):
-            self.client.command("Forward")
-
-    def level_up(self):
-        if not self.state.ready_for_incantation():
-            return
-
-        requirements = self.state.requirements()
-
-        for resource, amount in requirements.items():
-            if resource == "players":
-                continue
-
-        for _ in range(amount):
-            self.client.command(f"Set {resource}")
-
-        self.client.command("Broadcast LEVELUP")
-
-        response = self.client.command("Incantation")
-        if "Current level:" in response:
-            self.state.level += 1
-            self.state.broadcast_cooldown = 0
-
-        print("Incantation:", response)
-
-    def collect_current_tile(self):
-        current_tile = self.state.current_tile()
-
-        for resource in current_tile:
-            print(f"Taking {resource}")
-            self.client.command(f"Take {resource}")
-
-    def follow_broadcast(self):
-        direction = self.state.last_broadcast
-        print(f"Following broadcast direction {direction}")
-
-        if direction == 0:
-            print("Arrived at leader, waiting")
-            self.client.command("Look")
-            return
-
-        if direction == 1:
-            self.client.command("Forward")
-        elif direction in [2, 3, 4]:
-            self.client.command("Left")
-            self.client.command("Forward")
-        elif direction == 5:
-            self.client.command("Left")
-            self.client.command("Left")
-            self.client.command("Forward")
-        elif direction in [6, 7, 8]:
-            self.client.command("Right")
-            self.client.command("Forward")
-        
-    def call_players(self):
-        required_players = self.state.requirements().get("players", 1)
-        players_here = self.state.player_count_on_tile()
-
-        print(f"Players here: {players_here}/{required_players}")
-
-        if self.state.broadcast_cooldown <= 0:
-            print("Calling players for incantation")
-            self.client.command("Broadcast LEVELUP")
-            self.state.broadcast_cooldown = 5
-        else:
-            self.state.broadcast_cooldown -= 1
-
-        self.client.command("Look")
