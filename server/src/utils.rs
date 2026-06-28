@@ -7,7 +7,7 @@
 
 use mio::Token;
 use mio::net::TcpStream;
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::io::Write;
 use std::time::SystemTime;
 
@@ -39,6 +39,8 @@ pub struct Client {
     pub is_gui: bool,
     pub action_deadline: Option<SystemTime>,
     pub hunger_check_deadline: SystemTime,
+    pub command_queue: VecDeque<String>,
+    pub active_command: Option<String>,
 }
 
 #[derive(Debug, Clone)]

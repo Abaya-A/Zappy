@@ -6,10 +6,16 @@
  */
 
 use mio::Token;
-use crate::timers;
-use crate::utils::{Server, send_result, notify_gui, compute_direction};
 
-fn broadcast_to_others(token: Token, server: &mut Server, msg: &str, ex: u32, ey: u32)
+use crate::utils::{
+    compute_direction,
+    notify_gui,
+    send_response,
+    send_result,
+    Server,
+};
+
+fn broadcast_to_others(token: Token, server: &mut Server, message: &str, emitter_x: u32, emitter_y: u32)
 {
     let width = server.params.width;
     let height = server.params.height;
@@ -18,31 +24,44 @@ fn broadcast_to_others(token: Token, server: &mut Server, msg: &str, ex: u32, ey
         if *other_token == token || client.is_gui {
             continue;
         }
-        if let Some(player) = &client.player {
-            let k = compute_direction(ex, ey, player.x, player.y, &player.direction, width, height);
-            let _ = crate::utils::send_response(
-                &mut client.stream,
-                &format!("message {}, {}\n", k, msg),
-            );
-        }
+
+        let Some(player) = &client.player else {
+            continue;
+        };
+
+        let direction = compute_direction(
+            emitter_x,
+            emitter_y,
+            player.x,
+            player.y,
+            &player.direction,
+            width,
+            height,
+        );
+
+        let response = format!("message {}, {}\n", direction, message);
+        let _ = send_response(&mut client.stream, &response);
     }
 }
 
-pub fn cmd_broadcast(token: Token, server: &mut Server, msg: String)
+fn notify_broadcast_to_gui(token: Token, server: &mut Server, message: &str)
 {
-    if !timers::can_act(token, server) {
-        send_result(token, server, "ko");
-        return;
-    }
-    
-    let (n, ex, ey) = {
+    let player_number = token.0 as u32;
+    let response = format!("pbc #{} {}\n", player_number, message);
+
+    notify_gui(&mut server.clients, &response);
+}
+
+pub fn cmd_broadcast(token: Token, server: &mut Server, message: String)
+{
+    let (emitter_x, emitter_y) = {
         let client = server.clients.get(&token).unwrap();
         let player = client.player.as_ref().unwrap();
-        (token.0 as u32, player.x, player.y)
+
+        (player.x, player.y)
     };
 
-    broadcast_to_others(token, server, &msg, ex, ey);
+    broadcast_to_others(token, server, &message, emitter_x, emitter_y);
     send_result(token, server, "ok");
-    timers::start_action(token, server, 7);
-    notify_gui(&mut server.clients, &format!("pbc #{} {}\n", n, msg));
+    notify_broadcast_to_gui(token, server, &message);
 }

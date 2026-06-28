@@ -33,7 +33,7 @@ void ModelRenderer3D::draw(
 
             _shader
                 .setTransformationProjectionMatrix(projection * transform)
-                .setColor(subMesh.color)
+                .setColor(fallbackColor)
                 .draw(mesh);
         }
         return;
