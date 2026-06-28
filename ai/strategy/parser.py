@@ -33,4 +33,12 @@ def parse_look(text):
             tiles.append([])
 
     return tiles
+
+def parse_broadcast(msg):
+    parts = msg.split(",", 1)
+
+    direction = int(parts[0].replace("message", "").strip())
+    content = parts[1].strip()
+
+    return direction, content
         

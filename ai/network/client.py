@@ -8,6 +8,7 @@ class ZappyClient:
         self.team = team
         self.sock = None
         self.file = None
+        self.messages = []
 
     def connect(self):
 
@@ -45,7 +46,8 @@ class ZappyClient:
                 raise RuntimeError("Player is dead")
 
             if response.startswith("message "):
-                print(f"Broadcast ignored: {response}")
+                print(f"Broadcast received: {response}")
+                self.messages.append(response)
                 continue
 
             if response.startswith("eject:"):
