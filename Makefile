@@ -16,6 +16,7 @@ GUI_BUILD_BIN   := $(GUI_BUILD_DIR)/$(GUI_NAME)
 
 AI_DIR 			:= ai
 AI_NAME        	:= zappy_ai
+AI_RUN			:= $(AI_RUN)
 AI_BUILD  		:= $(AI_DIR)/$(AI_NAME)
 
 .PHONY: all server zappy_server zappy_gui zappy_ai clean fclean re clean_gui fclean_gui clean_ai fclean_ai
@@ -37,7 +38,10 @@ zappy_gui:
 
 zappy_ai:
 	cp $(AI_BUILD) ./$(AI_NAME)
+	cp $(AI_BUILD) ./$(AI_RUN)
 	chmod +x ./$(AI_NAME)
+	chmod +x ./$(AI_RUN)
+
 
 clean: clean_tests clean_gui clean_ai
 	$(MAKE) -C $(SERVER_DIR) clean
@@ -56,6 +60,7 @@ fclean: fclean_tests fclean_ai
 	rm -f $(GUI_NAME)
 	rm -rf $(GUI_BUILD_DIR)
 	rm -f $(AI_NAME)
+	rm -f $(AI_RUN)
 
 fclean_gui:
 	rm -f $(GUI_NAME)

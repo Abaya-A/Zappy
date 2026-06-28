@@ -46,3 +46,22 @@ LEVEL_REQUIREMENTS = {
         "thystame": 1,
     }
 }
+
+RESOURCE = [
+    "food",
+    "linemate",
+    "deraumere",
+    "sibur",
+    "mendiane",
+    "phiras",
+    "thystame"
+]
+
+RESOURCE_PRIORITY = [
+    "linemate",
+    "deraumere",
+    "sibur",
+    "mendiane",
+    "phiras",
+    "thystame"
+]

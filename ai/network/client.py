@@ -8,7 +8,9 @@ class ZappyClient:
         self.team = team
         self.sock = None
         self.file = None
+
         self.messages = []
+        self.current_level_line = None
 
     def connect(self):
 
@@ -39,19 +41,66 @@ class ZappyClient:
     def command(self, cmd):
         self.send_raw(cmd)
 
-        while True:
-            response = self.read_line()
+        command_name = cmd.split()[0]
 
-            if response == "dead":
+        while True:
+            line = self.read_line()
+
+            if line == "dead":
                 raise RuntimeError("Player is dead")
 
-            if response.startswith("message "):
-                print(f"Broadcast received: {response}")
-                self.messages.append(response)
+            if line.startswith("message "):
+                self.messages.append(line)
+                print(f"Broadcast received: {line}")
                 continue
 
-            if response.startswith("eject:"):
-                print(f"Eject ignored: {response}")
+            if line.startswith("eject:"):
+                print(f"Eject ignored: {line}")
                 continue
 
-            return response
+            if command_name == "Incantation":
+                return self.handle_incantation_response(line)
+
+            if line == "Elevation underway":
+                self.current_level_line = self.read_incantation_result()
+                continue
+
+            if line.startswith("Current level:"):
+                self.current_level_line = line
+                continue
+
+            return line
+
+    def handle_incantation_response(self, line):
+        if line == "ko":
+            return "ko"
+
+        if line.startswith("Current level:"):
+            return line
+
+        if line != "Elevation underway":
+            return line
+
+        return self.read_incantation_result()
+
+    def read_incantation_result(self):
+        while True:
+            line = self.read_line()
+
+            if line == "dead":
+                raise RuntimeError("Player is dead")
+
+            if line.startswith("message "):
+                self.messages.append(line)
+                print(f"Broadcast received: {line}")
+                continue
+
+            if line.startswith("eject:"):
+                print(f"Eject ignored: {line}")
+                continue
+
+            if line.startswith("Current level:"):
+                return line
+
+            if line == "ko":
+                return "ko"
