@@ -133,6 +133,12 @@ $> ./zappy_ai --help
 USAGE: ./zappy_ai -p port -n name -h machine
 ```
 
+To run multiple AIs :
+
+```sh
+$> ./run_ai.sh
+```
+
 ### Testing
 
 uses the text folder, run the test suite with:

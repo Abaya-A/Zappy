@@ -1,14 +1,4 @@
-from ai.strategy.levels import LEVEL_REQUIREMENTS
-
-
-RESOURCE_PRIORITY = [
-    "linemate",
-    "deraumere",
-    "sibur",
-    "mendiane",
-    "phiras",
-    "thystame"
-]
+from ai.strategy.levels import *
 
 class State:
     def __init__(self):
@@ -68,7 +58,19 @@ class State:
         return missing
 
     def ready_for_incantation(self):
-        return len(self.missing_resources()) == 0
+        req = self.requirements()
+        required_players = req.get("players", 1)
+
+        if self.player_count_on_tile() != required_players:
+            return False
+
+        for resource, amount in req.items():
+            if resource == "players":
+                continue
+            if self.inventory.get(resource, 0) < amount:
+                return False
+
+        return True
     
     def next_missing_resource(self):
         missing = self.missing_resources()
@@ -80,4 +82,4 @@ class State:
         return None
     
     def player_count_on_tile(self):
-        return self.current_tile().count("player") + 1
+        return self.current_tile().count("player")
