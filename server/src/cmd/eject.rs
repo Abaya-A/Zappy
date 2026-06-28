@@ -6,7 +6,7 @@
  */
 
 use mio::Token;
-use crate::utils::{Direction, Server, format_ppo, send_response, notify_gui};
+use crate::utils::{Direction, Server, format_ppo, send_response, notify_gui, compute_direction};
 
 fn get_player_infos(token: Token, server: &Server) -> (u32, u32, Direction)
 {
@@ -40,21 +40,22 @@ fn move_players(server: &mut Server, players: &[Token], x: u32, y: u32, new_x: u
     }
 }
 
-fn notify_players(server: &mut Server, players: &[Token], direction: &Direction)
+fn notify_players(server: &mut Server, players: &[Token], ejector_x: u32, ejector_y: u32, direction: &Direction)
 {
-    let dir = match direction {
-        Direction::N => Direction::S.to_num(),
-        Direction::S => Direction::N.to_num(),
-        Direction::E => Direction::W.to_num(),
-        Direction::W => Direction::E.to_num(),
-    };
+    let width = server.params.width;
+    let height = server.params.height;
 
     for token in players {
         let client = server.clients.get_mut(token).unwrap();
-        let _ = send_response(
-            &mut client.stream,
-            &format!("eject: {}\n", dir),
-        );
+        if let Some(player) = &client.player {
+            let k = compute_direction(
+                ejector_x, ejector_y,
+                player.x, player.y,
+                &player.direction,
+                width, height,
+            );
+            let _ = send_response(&mut client.stream, &format!("eject: {}\n", k));
+        }
     }
 }
 
@@ -70,8 +71,12 @@ pub fn cmd_eject(token: Token, server: &mut Server)
     }
 
     let (new_x, new_y) = next_tile(x, y, &direction, server);
+
+    // destroy eggs on the ejected tiles
+    server.world.eggs.retain(|egg| !(egg.x == x && egg.y == y));
+
     move_players(server, &others, x, y, new_x, new_y);
-    notify_players(server, &others, &direction);
+    notify_players(server, &others, x, y, &direction);
 
     let client = server.clients.get_mut(&token).unwrap();
     let _ = send_response(&mut client.stream, "ok\n");

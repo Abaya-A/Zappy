@@ -160,7 +160,8 @@ pub fn send_result(token: Token, server: &mut Server, state: &str)
     let _ = send_response(&mut client.stream, &format!("{state}\n"));
 }
 
-pub fn resource_to_index(name: &str) -> u32 {
+pub fn resource_to_index(name: &str) -> u32
+{
     match name {
         "food"      => 0,
         "linemate"  => 1,
@@ -171,4 +172,47 @@ pub fn resource_to_index(name: &str) -> u32 {
         "thystame"  => 6,
         _           => 0,
     }
+}
+
+fn shortest_diff(diff: i32, size: i32) -> i32
+{
+    if diff.abs() <= size / 2 { diff } else if diff > 0 { diff - size } else { diff + size }
+}
+
+
+// compute direction
+
+fn angle_to_tile(angle: f64) -> u32
+{
+    match angle as u32 {
+        0..=22 | 338..=360 => 1,
+        23..=67            => 2,
+        68..=112           => 3,
+        113..=157          => 4,
+        158..=202          => 5,
+        203..=247          => 6,
+        248..=292          => 7,
+        _                  => 8,
+    }
+}
+
+pub fn compute_direction(ex: u32, ey: u32, rx: u32, ry: u32,rdir: &Direction,width: u32, height: u32) -> u32
+{
+    if ex == rx && ey == ry {
+        return 0;
+    }
+    
+    let dx = shortest_diff(ex as i32 - rx as i32, width as i32);
+    let dy = shortest_diff(ey as i32 - ry as i32, height as i32);
+
+    let angle = ((-dy as f64).atan2(dx as f64).to_degrees() + 360.0) % 360.0;
+
+    let offset = match rdir {
+        Direction::N => 0.0,
+        Direction::E => 90.0,
+        Direction::S => 180.0,
+        Direction::W => 270.0,
+    };
+
+    angle_to_tile((angle - offset + 360.0) % 360.0)
 }
