@@ -27,17 +27,6 @@ pub fn ms_until_deadline(deadline: SystemTime) -> Option<u64> {
         .map(|d| d.as_millis() as u64)
 }
 
-pub fn can_act(token: Token, server: &Server) -> bool {
-    if let Some(client) = server.clients.get(&token) {
-        match client.action_deadline {
-            Some(deadline) => SystemTime::now() >= deadline,
-            None => true,
-        }
-    } else {
-        false
-    }
-}
-
 fn command_duration_units(command: &Command) -> u32
 {
     match command {
@@ -164,13 +153,6 @@ pub fn process_queued_commands(server: &mut Server)
 
     for (token, command, is_gui) in instant_commands {
         execute_command(token, server, command, is_gui);
-    }
-}
-
-pub fn start_action(token: Token, server: &mut Server, action_units: u32) {
-    if let Some(client) = server.clients.get_mut(&token) {
-        let duration_ms = calculate_action_duration_ms(action_units, server.params.frequency);
-        client.action_deadline = Some(get_deadline(duration_ms));
     }
 }
 
