@@ -40,6 +40,7 @@ pub struct Client {
     pub action_deadline: Option<SystemTime>,
     pub hunger_check_deadline: SystemTime,
     pub command_queue: VecDeque<String>,
+    pub active_command: Option<String>,
 }
 
 #[derive(Debug, Clone)]

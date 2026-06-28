@@ -36,37 +36,147 @@ pub fn can_act(token: Token, server: &Server) -> bool {
     }
 }
 
-pub fn process_queued_commands(server: &mut Server) {
-    let now = SystemTime::now();
-    let mut commands_to_process: Vec<(Token, String, bool)> = Vec::new();
+fn command_duration_units(command: &Command) -> u32
+{
+    match command {
+        Command::Forward => 7,
+        Command::Right => 7,
+        Command::Left => 7,
+        Command::Look => 7,
+        Command::Inventory => 1,
+        Command::Broadcast(_) => 7,
+        Command::ConnectNbr => 0,
+        Command::Fork => 42,
+        Command::Eject => 7,
+        Command::Take(_) => 7,
+        Command::Set(_) => 7,
+        Command::Incantation => 300,
+        Command::Unknown => 0,
+    }
+}
 
-    // Push to the queue the commands
-    for (token, client) in server.clients.iter_mut() {
-        if let Some(deadline) = client.action_deadline {
-            if now >= deadline {
-                client.action_deadline = None;
-                if let Some(command_str) = client.command_queue.pop_front() {
-                    let is_gui = client.is_gui;
-                    commands_to_process.push((*token, command_str, is_gui));
-                }
-            }
-        } else if !client.command_queue.is_empty() {
-            if let Some(command_str) = client.command_queue.pop_front() {
-                let is_gui = client.is_gui;
-                commands_to_process.push((*token, command_str, is_gui));
-            }
+const DEBUG_COMMAND_EXECUTION: bool = true;
+
+fn debug_execute_command(token: Token, is_gui: bool, command: &str)
+{
+    if !DEBUG_COMMAND_EXECUTION {
+        return;
+    }
+
+    println!(
+        "[EXEC] token={:?} is_gui={} cmd={}",
+        token,
+        is_gui,
+        command
+    );
+}
+
+fn execute_command(token: Token, server: &mut Server, command_str: String, is_gui: bool)
+{
+    debug_execute_command(token, is_gui, &command_str);
+
+    if is_gui {
+        let cmd = GuiCommand::from_str(&command_str);
+        crate::handle_command::handle_gui_command(token, server, cmd);
+        return;
+    }
+
+    let cmd = Command::from_str(&command_str);
+    crate::handle_command::handle_command(token, server, cmd);
+}
+
+fn finish_ready_commands(server: &mut Server) -> Vec<(Token, String, bool)>
+{
+    let now = SystemTime::now();
+    let tokens: Vec<Token> = server.clients.keys().copied().collect();
+    let mut ready_commands = Vec::new();
+
+    for token in tokens {
+        let Some(client) = server.clients.get_mut(&token) else {
+            continue;
+        };
+
+        if client.is_gui {
+            continue;
+        }
+
+        let Some(deadline) = client.action_deadline else {
+            continue;
+        };
+
+        if now < deadline {
+            continue;
+        }
+
+        client.action_deadline = None;
+
+        if let Some(command) = client.active_command.take() {
+            ready_commands.push((token, command, false));
         }
     }
 
-    // Process the commands
-    for (token, command_str, is_gui) in commands_to_process {
-        if is_gui {
-            let cmd = GuiCommand::from_str(&command_str);
-            crate::handle_command::handle_gui_command(token, server, cmd);
-        } else {
-            let cmd = Command::from_str(&command_str);
-            crate::handle_command::handle_command(token, server, cmd);
+    ready_commands
+}
+
+fn start_idle_commands(server: &mut Server) -> Vec<(Token, String, bool)>
+{
+    let tokens: Vec<Token> = server.clients.keys().copied().collect();
+    let frequency = server.params.frequency;
+    let mut instant_commands = Vec::new();
+
+    for token in tokens {
+        let Some(client) = server.clients.get_mut(&token) else {
+            continue;
+        };
+
+        if client.is_gui {
+            while let Some(command) = client.command_queue.pop_front() {
+                instant_commands.push((token, command, true));
+            }
+            continue;
         }
+
+        if client.player.is_none() {
+            continue;
+        }
+
+        if client.active_command.is_some() || client.action_deadline.is_some() {
+            continue;
+        }
+
+        let Some(command_str) = client.command_queue.pop_front() else {
+            continue;
+        };
+
+        let command = Command::from_str(&command_str);
+        let duration_units = command_duration_units(&command);
+
+        if duration_units == 0 {
+            instant_commands.push((token, command_str, false));
+            continue;
+        }
+
+        let duration_ms = calculate_action_duration_ms(duration_units, frequency);
+
+        client.action_deadline = Some(get_deadline(duration_ms));
+        client.active_command = Some(command_str);
+    }
+
+    instant_commands
+}
+
+pub fn process_queued_commands(server: &mut Server)
+{
+    let ready_commands = finish_ready_commands(server);
+
+    for (token, command, is_gui) in ready_commands {
+        execute_command(token, server, command, is_gui);
+    }
+
+    let instant_commands = start_idle_commands(server);
+
+    for (token, command, is_gui) in instant_commands {
+        execute_command(token, server, command, is_gui);
     }
 }
 
@@ -101,11 +211,7 @@ pub fn verify_player_hunger(server: &mut Server)
             }
             client.hunger_check_deadline = get_deadline(100);
         }
-        if let Some(deadline) = client.action_deadline {
-            if now >= deadline {
-                client.action_deadline = None;
-            }
-        }
+
     }
     for dead_token in dead_players {
         if let Some(mut client) = server.clients.remove(&dead_token) {

@@ -6,8 +6,15 @@
  */
 
 use mio::Token;
-use crate::utils::{Direction, Player, Server, format_ppo, notify_gui, send_result};
-use crate::timers;
+
+use crate::utils::{
+    format_ppo,
+    notify_gui,
+    send_result,
+    Direction,
+    Player,
+    Server,
+};
 
 fn go_right(player: &mut Player)
 {
@@ -19,23 +26,22 @@ fn go_right(player: &mut Player)
     };
 }
 
+fn rotate_player_right(token: Token, server: &mut Server) -> String
+{
+    let client = server.clients.get_mut(&token).unwrap();
+    let player = client.player.as_mut().unwrap();
+
+    go_right(player);
+
+    let player_number = token.0 as u32;
+
+    format_ppo(player_number, player.x, player.y, player)
+}
+
 pub fn cmd_right(token: Token, server: &mut Server)
 {
-    if !timers::can_act(token, server) {
-        send_result(token, server, "ko");
-        return;
-    }
-
-    let ppo = {
-        let client = server.clients.get_mut(&token).unwrap();
-        let player = client.player.as_mut().unwrap();
-        go_right(player);
-        let n = token.0 as u32;
-        let ppo = format_ppo(n, player.x, player.y, player);
-        ppo
-    };
+    let ppo = rotate_player_right(token, server);
 
     send_result(token, server, "ok");
     notify_gui(&mut server.clients, &ppo);
-    timers::start_action(token, server, 7);
 }

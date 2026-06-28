@@ -6,8 +6,16 @@
  */
 
 use mio::Token;
-use crate::utils::{Direction, Server, format_ppo, send_response, notify_gui, compute_direction, send_result};
-use crate::timers;
+
+use crate::utils::{
+    compute_direction,
+    format_ppo,
+    notify_gui,
+    send_response,
+    send_result,
+    Direction,
+    Server,
+};
 
 fn get_player_infos(token: Token, server: &Server) -> (u32, u32, Direction)
 {
@@ -17,7 +25,7 @@ fn get_player_infos(token: Token, server: &Server) -> (u32, u32, Direction)
     (player.x, player.y, player.direction.clone())
 }
 
-fn next_tile(x: u32, y: u32, direction: &Direction, server: &Server,) -> (u32, u32)
+fn next_tile(x: u32, y: u32, direction: &Direction, server: &Server) -> (u32, u32)
 {
     match direction {
         Direction::N => (x, (y + server.params.height - 1) % server.params.height),
@@ -27,71 +35,122 @@ fn next_tile(x: u32, y: u32, direction: &Direction, server: &Server,) -> (u32, u
     }
 }
 
-fn move_players(server: &mut Server, players: &[Token], x: u32, y: u32, new_x: u32, new_y: u32)
+fn get_other_players_on_tile(token: Token, server: &Server, x: u32, y: u32) -> Vec<Token>
+{
+    server.world.tiles[y as usize][x as usize]
+        .players
+        .iter()
+        .filter(|&&player_token| player_token != token)
+        .copied()
+        .collect()
+}
+
+fn destroy_eggs_on_tile(server: &mut Server, x: u32, y: u32)
+{
+    server.world.eggs.retain(|egg| !(egg.x == x && egg.y == y));
+}
+
+fn move_players(
+    server: &mut Server,
+    players: &[Token],
+    old_x: u32,
+    old_y: u32,
+    new_x: u32,
+    new_y: u32,
+)
 {
     for token in players {
-        server.world.tiles[y as usize][x as usize].players.retain(|&t| t != *token);
+        server.world.tiles[old_y as usize][old_x as usize]
+            .players
+            .retain(|&player_token| player_token != *token);
 
-        server.world.tiles[new_y as usize][new_x as usize].players.push(*token);
+        server.world.tiles[new_y as usize][new_x as usize]
+            .players
+            .push(*token);
 
-        let player = server.clients.get_mut(token).unwrap().player.as_mut().unwrap();
+        let player = server
+            .clients
+            .get_mut(token)
+            .unwrap()
+            .player
+            .as_mut()
+            .unwrap();
 
         player.x = new_x;
         player.y = new_y;
     }
 }
 
-fn notify_players(server: &mut Server, players: &[Token], ejector_x: u32, ejector_y: u32)
+fn notify_ejected_players(
+    server: &mut Server,
+    players: &[Token],
+    ejector_x: u32,
+    ejector_y: u32,
+)
 {
     let width = server.params.width;
     let height = server.params.height;
 
     for token in players {
         let client = server.clients.get_mut(token).unwrap();
-        if let Some(player) = &client.player {
-            let k = compute_direction(
-                ejector_x, ejector_y,
-                player.x, player.y,
-                &player.direction,
-                width, height,
-            );
-            let _ = send_response(&mut client.stream, &format!("eject: {}\n", k));
-        }
+
+        let Some(player) = &client.player else {
+            continue;
+        };
+
+        let direction = compute_direction(
+            ejector_x,
+            ejector_y,
+            player.x,
+            player.y,
+            &player.direction,
+            width,
+            height,
+        );
+
+        let _ = send_response(&mut client.stream, &format!("eject: {}\n", direction));
+    }
+}
+
+fn notify_eject_to_gui(
+    ejector: Token,
+    server: &mut Server,
+    ejected_players: &[Token],
+)
+{
+    let ejector_number = ejector.0 as u32;
+
+    notify_gui(&mut server.clients, &format!("pex #{}\n", ejector_number));
+
+    for token in ejected_players {
+        let player_number = token.0 as u32;
+        let ppo = {
+            let client = server.clients.get(token).unwrap();
+            let player = client.player.as_ref().unwrap();
+
+            format_ppo(player_number, player.x, player.y, player)
+        };
+
+        notify_gui(&mut server.clients, &ppo);
     }
 }
 
 pub fn cmd_eject(token: Token, server: &mut Server)
 {
-    if !timers::can_act(token, server) {
-        send_result(token, server, "ko");
-        return;
-    }
-
     let (x, y, direction) = get_player_infos(token, server);
-    let others: Vec<Token> = server.world.tiles[y as usize][x as usize].players.iter().filter(|&&t| t != token).copied().collect();
+    let ejected_players = get_other_players_on_tile(token, server, x, y);
 
-    if others.is_empty() {
+    if ejected_players.is_empty() {
         send_result(token, server, "ko");
         return;
     }
 
     let (new_x, new_y) = next_tile(x, y, &direction, server);
 
-    // destroy eggs on the ejected tiles
-    server.world.eggs.retain(|egg| !(egg.x == x && egg.y == y));
-
-    move_players(server, &others, x, y, new_x, new_y);
-    notify_players(server, &others, x, y);
+    destroy_eggs_on_tile(server, x, y);
+    move_players(server, &ejected_players, x, y, new_x, new_y);
+    notify_ejected_players(server, &ejected_players, x, y);
 
     send_result(token, server, "ok");
-    timers::start_action(token, server, 7);
-
-    // notify gui
-    for other_token in &others {
-        let n = other_token.0 as u32;
-        let player = server.clients.get(other_token).unwrap().player.as_ref().unwrap();
-        let ppo = format_ppo(n, new_x, new_y, player);
-        notify_gui(&mut server.clients, &format!("pex #{}\n", n));
-        notify_gui(&mut server.clients, &ppo);
-    }
+    notify_eject_to_gui(token, server, &ejected_players);
 }
