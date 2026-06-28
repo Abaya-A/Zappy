@@ -1,0 +1,38 @@
+name: AI CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - "feat/**"
+      - "ci/**"
+  pull_request:
+    branches:
+      - main
+
+env:
+  DEPS_DIR: ${{ github.workspace }}/.ci-deps
+  BUILD_TYPE: Release
+
+jobs:
+  ai-build:
+    name: Build ai
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkoutt repository
+        uses: actions/Checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get install -y python3 python3-pip python3-venv
+          python3 -m venv ~/pytorch-env
+          source ~/pytorch-env/bin/activate
+          pip install --upgrade pip
+          pip install numpy
+          pip install torch
+
+      - name: Build AI
+        run: |
+          make zappy_ai
