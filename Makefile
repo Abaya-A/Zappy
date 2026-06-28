@@ -16,7 +16,7 @@ GUI_BUILD_BIN   := $(GUI_BUILD_DIR)/$(GUI_NAME)
 
 AI_DIR 			:= ai
 AI_NAME        	:= zappy_ai
-AI_RUN			:= $(AI_RUN)
+AI_RUN			:= run_ai.sh
 AI_BUILD  		:= $(AI_DIR)/$(AI_NAME)
 
 .PHONY: all server zappy_server zappy_gui zappy_ai clean fclean re clean_gui fclean_gui clean_ai fclean_ai
