@@ -6,7 +6,7 @@
  */
 
 use mio::Token;
-use crate::utils::{Player, Server, send_result};
+use crate::utils::{Player, Server, send_result, notify_gui};
 use crate::timers;
 use std::collections::HashMap;
 
@@ -70,7 +70,42 @@ fn check_incantation(server: &Server, player: &Player) -> bool {
     same_level_players >= requirements.players
 }
 
-pub fn cmd_incantation(token: Token, server: &mut Server) {
+fn incantation_failed(token: Token, server: &mut Server, player: &Player)
+{
+    send_result(token, server, "ko");
+    notify_gui(&mut server.clients, &format!("pie {} {} 0\n", player.x, player.y));
+}
+
+fn get_participants(server: &Server, player: &Player) -> Vec<u32>
+{
+    server.world.tiles[player.y as usize][player.x as usize].players.iter().filter(|&&t| {
+            server.clients.get(&t).and_then(|c| c.player.as_ref()).map(|p| p.level == player.level).unwrap_or(false)
+        }).map(|t| t.0 as u32).collect()
+}
+
+fn build_pic_message(player: &Player, participants: &[u32]) -> String
+{
+    let mut pic = format!("pic {} {} {}", player.x, player.y, player.level);
+    for n in participants {
+        pic.push_str(&format!(" #{}", n));
+    }
+    pic.push('\n');
+    pic
+}
+
+fn start_incantation(token: Token, server: &mut Server, player: &Player)
+{
+    let participants = get_participants(server, player);
+    let pic = build_pic_message(player, &participants);
+    notify_gui(&mut server.clients, &pic);
+
+    send_result(token, server, "Elevation underway");
+    notify_gui(&mut server.clients, &format!("pie {} {} 1\n", player.x, player.y));
+    timers::start_action(token, server, 300);
+}
+
+pub fn cmd_incantation(token: Token, server: &mut Server)
+{
     if !timers::can_act(token, server) {
         send_result(token, server, "ko");
         return;
@@ -84,11 +119,9 @@ pub fn cmd_incantation(token: Token, server: &mut Server) {
         }
     };
 
-    if check_incantation(server, &player) {
-        let response = format!("Elevation underway\nCurrent level: {}", player.level + 1);
-        send_result(token, server, &response);
-        timers::start_action(token, server, 300);
-    } else {
-        send_result(token, server, "ko");
+    if !check_incantation(server, &player) {
+        incantation_failed(token, server, &player);
+        return;
     }
+    start_incantation(token, server, &player);
 }

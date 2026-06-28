@@ -16,10 +16,6 @@ def parse_args():
 def main():
     args = parse_args()
 
-    # if args.help is not None:
-    #     print("USAGE: ./zappy_ai -p port -n name -h machine")
-    #     return
-
     client = ZappyClient(
         host=args.host,
         port=args.p,

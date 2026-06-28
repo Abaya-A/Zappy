@@ -15,7 +15,12 @@ namespace zappy::render3d {
 namespace {
 
 constexpr float Pi = 3.14159265358979323846f;
+constexpr float FullTurn = 2.0f * Pi;
+constexpr float LatitudeLimit = Pi * 0.38f;
+
 constexpr float GridLift = 0.025f;
+constexpr float PlanetRadiusScale = 0.45f;
+constexpr float PlanetRadiusPadding = 2.0f;
 
 constexpr std::size_t SurfaceChunkSize = 6;
 constexpr std::size_t GridChunkSize = 2;
@@ -23,11 +28,33 @@ constexpr std::size_t GridChunkSize = 2;
 constexpr Magnum::Color4 PlanetSurfaceColor{0.08f, 0.10f, 0.15f, 1.0f};
 constexpr Magnum::Color4 PlanetGridColor{0.85f, 0.90f, 1.0f, 1.0f};
 
+float safeMapSize(int size)
+{
+    return static_cast<float>(std::max(1, size));
+}
+
 float planetRadius(int width, int height)
 {
     const float mapSize = static_cast<float>(std::max(width, height));
 
-    return mapSize * 0.45f + 2.0f;
+    return mapSize * PlanetRadiusScale + PlanetRadiusPadding;
+}
+
+float normalizedGridCoordinate(int coordinate, int mapSize)
+{
+    return static_cast<float>(coordinate) / safeMapSize(mapSize);
+}
+
+float longitudeFromGridX(int x, int width)
+{
+    return normalizedGridCoordinate(x, width) * FullTurn;
+}
+
+float latitudeFromGridY(int y, int height)
+{
+    const float normalizedY = normalizedGridCoordinate(y, height);
+
+    return -LatitudeLimit + normalizedY * LatitudeLimit * 2.0f;
 }
 
 void addLine(
@@ -122,18 +149,11 @@ private:
         return (verticalLines + horizontalLines) * GridChunkSize;
     }
 
-    float longitude(int x) const
-    {
-        return (static_cast<float>(x) / static_cast<float>(_width)) * 2.0f * Pi;
-    }
-
-    float latitude(int y) const
-    {
-        return -Pi * 0.5f
-            + (static_cast<float>(y) / static_cast<float>(_height)) * Pi;
-    }
-
-    Magnum::Vector3 spherePoint(float radius, float longitude, float latitude) const
+    Magnum::Vector3 spherePoint(
+        float radius,
+        float longitude,
+        float latitude
+    ) const
     {
         const float cosLatitude = std::cos(latitude);
 
@@ -148,8 +168,8 @@ private:
     {
         return spherePoint(
             _radius + lift,
-            longitude(x),
-            latitude(y)
+            longitudeFromGridX(x, _width),
+            latitudeFromGridY(y, _height)
         );
     }
 

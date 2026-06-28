@@ -15,9 +15,13 @@ find_package(Magnum REQUIRED
     Sdl2Application
 )
 
-find_package(MagnumPlugins REQUIRED
-    GltfImporter
-)
+find_package(MagnumPlugins QUIET)
+
+if(MagnumPlugins_FOUND)
+    message(STATUS "MagnumPlugins found: glTF importer support enabled")
+else()
+    message(STATUS "MagnumPlugins not found: glTF importer support disabled")
+endif()
 
 set(ZAPPY_GUI_CLIENT_SOURCES
     src/main.cpp

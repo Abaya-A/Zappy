@@ -100,6 +100,21 @@ impl Direction {
     }
 }
 
+pub fn send_response(stream: &mut TcpStream, response: &str) -> std::io::Result<()>
+{
+    stream.write_all(response.as_bytes())
+}
+
+pub fn notify_gui(clients: &mut HashMap<Token, Client>, msg: &str)
+{
+    for client in clients.values_mut() {
+        if client.is_gui {
+            let _ = send_response(&mut client.stream, msg);
+        }
+    }
+    println!("GUI notified: {}", msg);
+}
+
 pub fn format_bct(server: &Server, x: u32, y: u32) -> String {
     if x < server.params.width && y < server.params.height {
         let tile = &server.world.tiles[y as usize][x as usize];
@@ -120,8 +135,8 @@ pub fn format_bct(server: &Server, x: u32, y: u32) -> String {
     }
 }
 
-pub fn format_ppo(n: u32, player: &Player) -> String {
-    format!("ppo #{} {} {} {}\n", n, player.x, player.y, player.direction.to_num())
+pub fn format_ppo(n: u32, x: u32, y: u32, player: &Player) -> String {
+    format!("ppo #{} {} {} {}\n", n, x, y, player.direction.to_num())
 }
 
 pub fn format_plv(n: u32, player: &Player) -> String {
@@ -144,19 +159,66 @@ pub fn format_pin(n: u32, player: &Player) -> String {
     )
 }
 
-pub fn send_response(stream: &mut TcpStream, response: &str) -> std::io::Result<()> {
-    stream.write_all(response.as_bytes())
-}
-
-pub fn send_result(token: Token, server: &mut Server, state: &str) {
+pub fn send_result(token: Token, server: &mut Server, state: &str)
+{
     let client = server.clients.get_mut(&token).unwrap();
     let _ = send_response(&mut client.stream, &format!("{state}\n"));
 }
 
-pub fn notify_gui(clients: &mut HashMap<Token, Client>, msg: &str) {
-    for client in clients.values_mut() {
-        if client.is_gui {
-            let _ = send_response(&mut client.stream, msg);
-        }
+
+pub fn resource_to_index(name: &str) -> u32
+{
+    match name {
+        "food"      => 0,
+        "linemate"  => 1,
+        "deraumere" => 2,
+        "sibur"     => 3,
+        "mendiane"  => 4,
+        "phiras"    => 5,
+        "thystame"  => 6,
+        _           => 0,
     }
+}
+
+fn shortest_diff(diff: i32, size: i32) -> i32
+{
+    if diff.abs() <= size / 2 { diff } else if diff > 0 { diff - size } else { diff + size }
+}
+
+
+// compute direction
+
+fn angle_to_tile(angle: f64) -> u32
+{
+    match angle as u32 {
+        0..=22 | 338..=360 => 1,
+        23..=67            => 2,
+        68..=112           => 3,
+        113..=157          => 4,
+        158..=202          => 5,
+        203..=247          => 6,
+        248..=292          => 7,
+        _                  => 8,
+    }
+}
+
+pub fn compute_direction(ex: u32, ey: u32, rx: u32, ry: u32,rdir: &Direction,width: u32, height: u32) -> u32
+{
+    if ex == rx && ey == ry {
+        return 0;
+    }
+    
+    let dx = shortest_diff(ex as i32 - rx as i32, width as i32);
+    let dy = shortest_diff(ey as i32 - ry as i32, height as i32);
+
+    let angle = ((-dy as f64).atan2(dx as f64).to_degrees() + 360.0) % 360.0;
+
+    let offset = match rdir {
+        Direction::N => 0.0,
+        Direction::E => 90.0,
+        Direction::S => 180.0,
+        Direction::W => 270.0,
+    };
+
+    angle_to_tile((angle - offset + 360.0) % 360.0)
 }

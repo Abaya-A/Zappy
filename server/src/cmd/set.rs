@@ -6,19 +6,23 @@
  */
 
 use mio::Token;
-use crate::utils::{Server, send_result};
+use crate::utils::{Server, send_result, notify_gui, resource_to_index};
 use crate::timers;
 
 fn remove_from_inventory(server: &mut Server, token: Token, resource: &str) -> bool
 {
     let client = server.clients.get_mut(&token).unwrap();
-
-    let count = client.player.as_mut().unwrap().inventory.entry(resource.to_string()).or_insert(0);
-
-    if *count == 0 {
-        return false;
+    let player = client.player.as_mut().unwrap();
+    
+    if resource == "food" {
+        if player.food == 0 { return false; }
+        player.food -= 1;
+        return true;
     }
+    
+    let count = player.inventory.entry(resource.to_string()).or_insert(0);
 
+    if *count == 0 { return false; }
     *count -= 1;
     true
 }
@@ -26,6 +30,13 @@ fn remove_from_inventory(server: &mut Server, token: Token, resource: &str) -> b
 fn drop_resource(server: &mut Server, x: usize, y: usize, resource: &str)
 {
     server.world.tiles[y][x].resources.entry(resource.to_string()).and_modify(|v| *v += 1).or_insert(1);
+}
+
+fn notify_set_to_gui(token: Token, server: &mut Server, obj: String)
+{
+    let i = resource_to_index(&obj);
+    let n = token.0 as u32;
+    notify_gui(&mut server.clients, &format!("pdr #{} {}\n", n, i));
 }
 
 pub fn cmd_set(token: Token, server: &mut Server, obj: String)
@@ -43,6 +54,7 @@ pub fn cmd_set(token: Token, server: &mut Server, obj: String)
     if remove_from_inventory(server, token, &obj) {
         drop_resource(server, x, y, &obj);
         send_result(token, server, "ok");
+        notify_set_to_gui(token, server, obj);
         timers::start_action(token, server, 7);
     } else {
         send_result(token, server, "ko");
