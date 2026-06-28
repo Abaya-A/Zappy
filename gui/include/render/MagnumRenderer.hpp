@@ -32,6 +32,7 @@ public:
     explicit MagnumRenderer(const Arguments &arguments);
 
     bool isOpen() const;
+    void close();
     void handleEvents();
     void render(const GameState &state);
 

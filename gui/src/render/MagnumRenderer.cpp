@@ -72,6 +72,15 @@ bool MagnumRenderer::isOpen() const
     return _isOpen;
 }
 
+void MagnumRenderer::close()
+{
+    if (!_isOpen)
+        return;
+
+    _isOpen = false;
+    exit();
+}
+
 void MagnumRenderer::handleEvents()
 {
     mainLoopIteration();

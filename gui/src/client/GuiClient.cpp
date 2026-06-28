@@ -40,6 +40,9 @@ void GuiClient::run()
 
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
+
+    _renderer.close();
+    _network.disconnect();
 }
 
 void GuiClient::handleLine(const std::string &line)
