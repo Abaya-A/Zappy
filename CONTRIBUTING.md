@@ -48,6 +48,17 @@ It is a simple yet effective convention that tells everything that is needed.
 - `<type>` : feat, fix, docs, chore, refactor, test, ci..
 - `<scope>`: ai, server, gui, ci, docs...
 
+# Review policy
+
+> PR are manage by the repo manager. He should check each ones's to limit conflict between teams. He could allow another member to accept the request if he checked it before.
+
+> It should be done on the same day, to keep a good pace in this project.
+check if it works is mandatory but we shouldn't not take attention in code quality to keep the project easily maintanable.
+
+# CI Pipeline
+
+> It checks for each parts if all depencies are here, install them, build the project and for gui check if all tests run well.
+
 /!\ Everything is mandatory !
 
 
