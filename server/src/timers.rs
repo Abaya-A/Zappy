@@ -219,33 +219,38 @@ fn handle_player_death(server: &mut Server, dead_token: Token)
         }
     }
 }
-
 pub fn verify_player_hunger(server: &mut Server)
 {
     let now = SystemTime::now();
     let mut dead_players = Vec::new();
+
     for (token, client) in server.clients.iter_mut() {
-        if now >= client.hunger_check_deadline {
-            if let Some(player) = &mut client.player {
-                if let Ok(elapsed) = player.last_food_update.elapsed() {
-                    let elapsed_s = elapsed.as_secs_f64();
-                    let game_time = elapsed_s * server.params.frequency as f64;
-                    let food_consumed = (game_time / 126.0) as u32;
-                    if food_consumed > 0 {  // ← ajout ici
-                        if player.food >= food_consumed {
-                            player.food -= food_consumed;
-                        } else {
-                            player.food = 0;
-                            dead_players.push(*token);
-                        }
-                        player.last_food_update = SystemTime::now();
-                    }
-                }
-            }
-            client.hunger_check_deadline = get_deadline(100);
+        if now < client.hunger_check_deadline {
+            continue;
         }
 
+        if let Some(player) = &mut client.player {
+            if let Ok(elapsed) = player.last_food_update.elapsed() {
+                let elapsed_s = elapsed.as_secs_f64();
+                let game_time = elapsed_s * server.params.frequency as f64;
+                let food_consumed = (game_time / 126.0) as u32;
+
+                if food_consumed > 0 {
+                    if player.food > food_consumed {
+                        player.food -= food_consumed;
+                    } else {
+                        player.food = 0;
+                        dead_players.push(*token);
+                    }
+
+                    player.last_food_update = SystemTime::now();
+                }
+            }
+        }
+
+        client.hunger_check_deadline = get_deadline(100);
     }
+
     for dead_token in dead_players {
         handle_player_death(server, dead_token);
     }
