@@ -1,3 +1,4 @@
+from ai.strategy.vision import tile_to_position
 
 def move_to_tile(self, tile_index):
     x, y = tile_to_position(tile_index)
