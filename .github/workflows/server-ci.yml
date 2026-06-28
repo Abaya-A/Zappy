@@ -27,6 +27,13 @@ jobs:
             - name: Install system dependencies
               run: |
                 rustup component add rustfmt
+                cd server
+                cargo install --locked cargo-deny && cargo deny init && cargo deny check
+
+            - name: Check dependencies
+              run : |
+                cd server
+                cargo deny check
 
             - name: Run SERVER fmt check
               run: |
