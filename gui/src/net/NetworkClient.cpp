@@ -5,8 +5,17 @@
 #include <fcntl.h>
 #include <iostream>
 #include <netdb.h>
+#include <poll.h>
 #include <sys/socket.h>
 #include <unistd.h>
+
+namespace {
+
+constexpr int ImmediateTimeoutMs = 0;
+constexpr int InfiniteTimeoutMs = -1;
+constexpr std::size_t ReadChunkSize = 4096;
+
+}
 
 NetworkClient::NetworkClient()
     : _fd(-1), _buffer()
@@ -110,8 +119,11 @@ bool NetworkClient::sendAll(const std::string &data)
         if (sent == -1 && errno == EINTR)
             continue;
 
-        if (sent == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
+        if (sent == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+            if (!waitForWritable())
+                return false;
             continue;
+        }
 
         std::cerr << "[ERROR]: send failed: " << std::strerror(errno) << std::endl;
         disconnect();
@@ -126,13 +138,15 @@ std::vector<std::string> NetworkClient::pollLines()
     if (!isConnected())
         return {};
 
-    receiveAvailableData();
+    if (waitForReadable(ImmediateTimeoutMs))
+        receiveAvailableData();
+
     return extractLines();
 }
 
 bool NetworkClient::receiveAvailableData()
 {
-    char chunk[4096];
+    char chunk[ReadChunkSize];
 
     while (true) {
         ssize_t received = recv(_fd, chunk, sizeof(chunk), 0);
@@ -194,4 +208,79 @@ bool NetworkClient::setNonBlocking()
     }
 
     return true;
+}
+
+bool NetworkClient::waitForReadable(int timeoutMs)
+{
+    struct pollfd descriptor {};
+
+    if (!isConnected())
+        return false;
+
+    descriptor.fd = _fd;
+    descriptor.events = POLLIN;
+
+    while (true) {
+        int result = poll(&descriptor, 1, timeoutMs);
+
+        if (result > 0)
+            break;
+
+        if (result == 0)
+            return false;
+
+        if (errno == EINTR)
+            continue;
+
+        std::cerr << "[ERROR]: poll failed: " << std::strerror(errno) << std::endl;
+        disconnect();
+        return false;
+    }
+
+    if (descriptor.revents & POLLIN)
+        return true;
+
+    if (descriptor.revents & (POLLERR | POLLHUP | POLLNVAL)) {
+        std::cerr << "[INFO]: server connection closed" << std::endl;
+        disconnect();
+        return false;
+    }
+
+    return false;
+}
+
+bool NetworkClient::waitForWritable()
+{
+    struct pollfd descriptor {};
+
+    if (!isConnected())
+        return false;
+
+    descriptor.fd = _fd;
+    descriptor.events = POLLOUT;
+
+    while (true) {
+        int result = poll(&descriptor, 1, InfiniteTimeoutMs);
+
+        if (result > 0)
+            break;
+
+        if (errno == EINTR)
+            continue;
+
+        std::cerr << "[ERROR]: poll failed: " << std::strerror(errno) << std::endl;
+        disconnect();
+        return false;
+    }
+
+    if (descriptor.revents & POLLOUT)
+        return true;
+
+    if (descriptor.revents & (POLLERR | POLLHUP | POLLNVAL)) {
+        std::cerr << "[INFO]: server connection closed" << std::endl;
+        disconnect();
+        return false;
+    }
+
+    return false;
 }

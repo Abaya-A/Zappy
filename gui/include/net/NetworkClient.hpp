@@ -21,10 +21,12 @@ public:
 private:
     int _fd;
     std::string _buffer;
+    std::vector<std::string> extractLines();
 
     bool tryConnectAddress(struct addrinfo *address);
     bool setNonBlocking();
     bool receiveAvailableData();
     bool sendAll(const std::string &data);
-    std::vector<std::string> extractLines();
+    bool waitForReadable(int timeoutMs);
+    bool waitForWritable();
 };
