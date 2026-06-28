@@ -11,11 +11,6 @@ use crate::timers;
 
 pub fn cmd_inventory(token: Token, server: &mut Server)
 {
-    if !timers::can_act(token, server) {
-        send_result(token, server, "ko");
-        return;
-    }
-
     let (response, pin) = {
         let client = server.clients.get(&token).unwrap();
         let player = client.player.as_ref().unwrap();

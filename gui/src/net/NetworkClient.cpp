@@ -12,13 +12,19 @@
 namespace {
 
 constexpr int ImmediateTimeoutMs = 0;
-constexpr int InfiniteTimeoutMs = -1;
+constexpr int WriteTimeoutMs = 1000;
 constexpr std::size_t ReadChunkSize = 4096;
+
+bool hasPollError(short revents)
+{
+    return (revents & (POLLERR | POLLHUP | POLLNVAL)) != 0;
+}
 
 }
 
 NetworkClient::NetworkClient()
-    : _fd(-1), _buffer()
+    : _fd(-1),
+      _buffer()
 {
 }
 
@@ -63,7 +69,7 @@ bool NetworkClient::connectToServer(const std::string &host, int port)
 
 bool NetworkClient::tryConnectAddress(struct addrinfo *address)
 {
-    int socketFd = socket(address->ai_family, address->ai_socktype, address->ai_protocol);
+    const int socketFd = socket(address->ai_family, address->ai_socktype, address->ai_protocol);
 
     if (socketFd == -1)
         return false;
@@ -83,6 +89,7 @@ void NetworkClient::disconnect()
         close(_fd);
         _fd = -1;
     }
+
     _buffer.clear();
 }
 
@@ -97,18 +104,20 @@ bool NetworkClient::sendLine(const std::string &line)
 
     if (!isConnected())
         return false;
+
     if (data.empty() || data.back() != '\n')
         data += '\n';
+
     return sendAll(data);
 }
 
 bool NetworkClient::sendAll(const std::string &data)
 {
-    const char *cursor = data.c_str();
+    const char *cursor = data.data();
     std::size_t remaining = data.size();
 
     while (remaining > 0) {
-        ssize_t sent = send(_fd, cursor, remaining, 0);
+        const ssize_t sent = send(_fd, cursor, remaining, 0);
 
         if (sent > 0) {
             cursor += sent;
@@ -138,7 +147,12 @@ std::vector<std::string> NetworkClient::pollLines()
     if (!isConnected())
         return {};
 
-    if (waitForReadable(ImmediateTimeoutMs))
+    const bool readable = waitForReadable(ImmediateTimeoutMs);
+
+    if (!isConnected())
+        return extractLines();
+
+    if (readable)
         receiveAvailableData();
 
     return extractLines();
@@ -148,8 +162,8 @@ bool NetworkClient::receiveAvailableData()
 {
     char chunk[ReadChunkSize];
 
-    while (true) {
-        ssize_t received = recv(_fd, chunk, sizeof(chunk), 0);
+    while (isConnected()) {
+        const ssize_t received = recv(_fd, chunk, sizeof(chunk), 0);
 
         if (received > 0) {
             _buffer.append(chunk, static_cast<std::size_t>(received));
@@ -172,22 +186,27 @@ bool NetworkClient::receiveAvailableData()
         disconnect();
         return false;
     }
+
+    return false;
 }
 
 std::vector<std::string> NetworkClient::extractLines()
 {
     std::vector<std::string> lines;
-    std::size_t newlinePos = _buffer.find('\n');
 
-    while (newlinePos != std::string::npos) {
+    while (true) {
+        const std::size_t newlinePos = _buffer.find('\n');
+
+        if (newlinePos == std::string::npos)
+            break;
+
         std::string line = _buffer.substr(0, newlinePos);
 
         if (!line.empty() && line.back() == '\r')
             line.pop_back();
 
-        lines.push_back(line);
+        lines.push_back(std::move(line));
         _buffer.erase(0, newlinePos + 1);
-        newlinePos = _buffer.find('\n');
     }
 
     return lines;
@@ -195,7 +214,7 @@ std::vector<std::string> NetworkClient::extractLines()
 
 bool NetworkClient::setNonBlocking()
 {
-    int flags = fcntl(_fd, F_GETFL, 0);
+    const int flags = fcntl(_fd, F_GETFL, 0);
 
     if (flags == -1) {
         std::cerr << "[ERROR]: fcntl failed: " << std::strerror(errno) << std::endl;
@@ -221,7 +240,7 @@ bool NetworkClient::waitForReadable(int timeoutMs)
     descriptor.events = POLLIN;
 
     while (true) {
-        int result = poll(&descriptor, 1, timeoutMs);
+        const int result = poll(&descriptor, 1, timeoutMs);
 
         if (result > 0)
             break;
@@ -237,16 +256,13 @@ bool NetworkClient::waitForReadable(int timeoutMs)
         return false;
     }
 
-    if (descriptor.revents & POLLIN)
-        return true;
-
-    if (descriptor.revents & (POLLERR | POLLHUP | POLLNVAL)) {
+    if (hasPollError(descriptor.revents)) {
         std::cerr << "[INFO]: server connection closed" << std::endl;
         disconnect();
         return false;
     }
 
-    return false;
+    return (descriptor.revents & POLLIN) != 0;
 }
 
 bool NetworkClient::waitForWritable()
@@ -260,10 +276,16 @@ bool NetworkClient::waitForWritable()
     descriptor.events = POLLOUT;
 
     while (true) {
-        int result = poll(&descriptor, 1, InfiniteTimeoutMs);
+        const int result = poll(&descriptor, 1, WriteTimeoutMs);
 
         if (result > 0)
             break;
+
+        if (result == 0) {
+            std::cerr << "[ERROR]: send timeout" << std::endl;
+            disconnect();
+            return false;
+        }
 
         if (errno == EINTR)
             continue;
@@ -273,14 +295,11 @@ bool NetworkClient::waitForWritable()
         return false;
     }
 
-    if (descriptor.revents & POLLOUT)
-        return true;
-
-    if (descriptor.revents & (POLLERR | POLLHUP | POLLNVAL)) {
+    if (hasPollError(descriptor.revents)) {
         std::cerr << "[INFO]: server connection closed" << std::endl;
         disconnect();
         return false;
     }
 
-    return false;
+    return (descriptor.revents & POLLOUT) != 0;
 }

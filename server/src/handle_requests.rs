@@ -50,6 +50,11 @@ pub fn handle_requests(token: Token, server: &mut Server) -> Option<Vec<String>>
 
 fn cleanup_client(token: Token, server: &mut Server) {
     if let Some(removed_client) = server.clients.remove(&token) {
+        if let Some(team_name) = &removed_client.team_name {
+            if let Some(team) = server.teams.iter_mut().find(|t| t.name == *team_name) {
+                team.available_slots += 1;
+            }
+        }
         if let Some(player) = &removed_client.player {
             let px = player.x as usize;
             let py = player.y as usize;

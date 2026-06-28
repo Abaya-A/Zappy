@@ -9,12 +9,12 @@ use mio::Token;
 use crate::utils::{Server, Direction, send_result};
 use crate::timers;
 
-fn get_player(token: Token, server: &Server) -> (u32, u32, Direction)
+fn get_player(token: Token, server: &Server) -> (u32, u32, Direction, u32)
 {
     let client = server.clients.get(&token).unwrap();
     let player = client.player.as_ref().unwrap();
 
-    (player.x, player.y, player.direction.clone())
+    (player.x, player.y, player.direction.clone(), player.level)
 }
 
 fn get_line_of_view(server: &Server, x: u32, y: u32, dir: Direction, distance: u32) -> Vec<(u32, u32)>
@@ -26,10 +26,10 @@ fn get_line_of_view(server: &Server, x: u32, y: u32, dir: Direction, distance: u
 
     for i in 0..(distance * 2 + 1) {
         let (tx, ty) = match dir {
-            Direction::N => ((x + i + width - distance) % width, (y + height - distance - 1) % height),
-            Direction::S => ((x + i + width - distance) % width, (y + distance + 1) % height),
-            Direction::E => ((x + distance + 1) % width, (y + i + height - distance) % height),
-            Direction::W => ((x + width - distance - 1) % width, (y + i + height - distance) % height),
+            Direction::N => ((x + i + width - distance) % width, (y + height - distance) % height),
+            Direction::S => ((x + distance + width - i) % width, (y + distance) % height),
+            Direction::E => ((x + distance) % width, (y + i + height - distance) % height),
+            Direction::W => ((x + width - distance) % width, (y + distance + height - i) % height),
         };
 
         tiles.push((tx, ty));
@@ -40,7 +40,7 @@ fn get_line_of_view(server: &Server, x: u32, y: u32, dir: Direction, distance: u
 
 fn build_look(token: Token, server: &Server) -> Vec<Vec<(u32, u32)>>
 {
-    let (x, y, dir) = get_player(token, server);
+    let (x, y, dir, level) = get_player(token, server);
 
     let mut tiles = Vec::new();
 
@@ -52,7 +52,7 @@ fn build_look(token: Token, server: &Server) -> Vec<Vec<(u32, u32)>>
 
         distance += 1;
 
-        if distance > 3 {
+        if distance > level {
             break;
         }
     }
@@ -89,6 +89,12 @@ fn format_str(server: &Server, vision: &Vec<Vec<(u32, u32)>>) -> String
 
             // add resources
             let tile = &server.world.tiles[*y as usize][*x as usize];
+            for _ in &tile.players {
+                if !items.is_empty() {
+                    items.push(' ');
+                }
+                items.push_str("player");
+            }
             for (res, count) in &tile.resources {
                 for _ in 0..*count {
                     if !items.is_empty() {
@@ -108,11 +114,6 @@ fn format_str(server: &Server, vision: &Vec<Vec<(u32, u32)>>) -> String
 
 pub fn cmd_look(token: Token, server: &mut Server)
 {
-    if !timers::can_act(token, server) {
-        send_result(token, server, "ko");
-        return;
-    }
-
     let looking = build_look(token, server);
     let response = format_str(server, &looking);
 

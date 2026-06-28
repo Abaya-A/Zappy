@@ -26,13 +26,13 @@ pub fn cmd_right(token: Token, server: &mut Server)
         return;
     }
 
-    let (n, ppo) = {
+    let ppo = {
         let client = server.clients.get_mut(&token).unwrap();
         let player = client.player.as_mut().unwrap();
         go_right(player);
         let n = token.0 as u32;
         let ppo = format_ppo(n, player.x, player.y, player);
-        (n, ppo)
+        ppo
     };
 
     send_result(token, server, "ok");
