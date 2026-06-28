@@ -1,4 +1,5 @@
 import socket
+import sys
 
 class ZappyClient:
 
@@ -47,7 +48,8 @@ class ZappyClient:
             line = self.read_line()
 
             if line == "dead":
-                raise RuntimeError("Player is dead")
+                print("[INFO] Player is dead, exiting.")
+                sys.exit(0)
 
             if line.startswith("message "):
                 self.messages.append(line)
