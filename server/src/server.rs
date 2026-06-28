@@ -15,19 +15,20 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use crate::handle_client;
 use crate::timers;
 use crate::timers::{get_poll_timeout, verify_player_hunger};
-use crate::utils::{self, Server, ServerParams, World};
+use crate::types::network::{Client, Server, ServerParams, send_response};
+use crate::types::game::{World, Tile, Team, Resource, Resources};
 
 const SERVER_TOKEN: Token = Token(0);
 const EVENTS_CAPACITY: usize = 128;
 
-const RESOURCE_DENSITIES: [(&str, f64); 7] = [
-    ("food", 0.5),
-    ("linemate", 0.3),
-    ("deraumere", 0.15),
-    ("sibur", 0.1),
-    ("mendiane", 0.1),
-    ("phiras", 0.08),
-    ("thystame", 0.05),
+const RESOURCE_DENSITIES: [(Resource, f64); 7] = [
+    (Resource::Food,      0.5),
+    (Resource::Linemate,  0.3),
+    (Resource::Deraumere, 0.15),
+    (Resource::Sibur,     0.1),
+    (Resource::Mendiane,  0.1),
+    (Resource::Phiras,    0.08),
+    (Resource::Thystame,  0.05),
 ];
 
 pub fn start_server(params: ServerParams)
@@ -116,7 +117,7 @@ fn accept_client(
         .register(&mut client_socket, token, Interest::READABLE)
         .unwrap();
 
-    if let Err(error) = utils::send_response(&mut client_socket, "WELCOME\n") {
+    if let Err(error) = send_response(&mut client_socket, "WELCOME\n") {
         eprintln!("Failed to send WELCOME: {}", error);
     }
 
@@ -124,9 +125,9 @@ fn accept_client(
     println!("New client: {}", client_addr);
 }
 
-fn create_client(client_socket: mio::net::TcpStream) -> utils::Client
+fn create_client(client_socket: mio::net::TcpStream) -> Client
 {
-    utils::Client {
+    Client {
         stream: client_socket,
         buffer: String::new(),
         team_name: None,
@@ -163,7 +164,7 @@ fn disconnect_client(token: Token, server: &mut Server)
     let _ = client.stream.shutdown(Shutdown::Both);
 }
 
-fn restore_team_slot(server: &mut Server, client: &utils::Client)
+fn restore_team_slot(server: &mut Server, client: &Client)
 {
     let Some(team_name) = &client.team_name else {
         return;
@@ -183,7 +184,7 @@ fn restore_team_slot(server: &mut Server, client: &utils::Client)
     team.available_slots += 1;
 }
 
-fn remove_player_from_tile(token: Token, server: &mut Server, client: &utils::Client)
+fn remove_player_from_tile(token: Token, server: &mut Server, client: &Client)
 {
     let Some(player) = &client.player else {
         return;
@@ -216,7 +217,7 @@ fn init_world(params: &ServerParams) -> Server
     server
 }
 
-fn create_tiles(width: u32, height: u32) -> Vec<Vec<utils::Tile>>
+fn create_tiles(width: u32, height: u32) -> Vec<Vec<Tile>>
 {
     let mut tiles = Vec::new();
 
@@ -224,9 +225,9 @@ fn create_tiles(width: u32, height: u32) -> Vec<Vec<utils::Tile>>
         let mut row = Vec::new();
 
         for _ in 0..width {
-            row.push(utils::Tile {
+            row.push(Tile {
                 players: Vec::new(),
-                resources: create_empty_resources(),
+                resources: Resources::default(),
             });
         }
 
@@ -236,23 +237,12 @@ fn create_tiles(width: u32, height: u32) -> Vec<Vec<utils::Tile>>
     tiles
 }
 
-fn create_empty_resources() -> HashMap<String, u32>
-{
-    let mut resources = HashMap::new();
-
-    for &(resource, _) in &RESOURCE_DENSITIES {
-        resources.insert(resource.to_string(), 0);
-    }
-
-    resources
-}
-
-fn create_teams(params: &ServerParams) -> Vec<utils::Team>
+fn create_teams(params: &ServerParams) -> Vec<Team>
 {
     params
         .teams_names
         .iter()
-        .map(|name| utils::Team {
+        .map(|name: &String| Team {
             name: name.clone(),
             available_slots: params.team_clients_nb as usize,
         })
@@ -311,7 +301,7 @@ fn resource_quantity(total_tiles: u32, density: f64) -> u32
 fn spawn_resource_type(
     server: &mut Server,
     rng_state: &mut u64,
-    resource: &str,
+    resource: Resource,
     quantity: u32,
 ) {
     for _ in 0..quantity {
@@ -322,10 +312,9 @@ fn spawn_resource_type(
     }
 }
 
-fn add_resource_to_tile(server: &mut Server, x: u32, y: u32, resource: &str)
+fn add_resource_to_tile(server: &mut Server, x: u32, y: u32, resource: Resource)
 {
-    *server.world.tiles[y as usize][x as usize]
+    server.world.tiles[y as usize][x as usize]
         .resources
-        .entry(resource.to_string())
-        .or_insert(0) += 1;
+        .add(resource, 1);
 }

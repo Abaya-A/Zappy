@@ -5,10 +5,10 @@
  *  Copyright (c) 2026 Jules Nourdin
  */
 
-use crate::utils::Server;
+use crate::types::network::{send_response, Server};
 use mio::Token;
 
 pub fn cmd_unknown_gui(token: Token, server: &mut Server) {
     let client = server.clients.get_mut(&token).unwrap();
-    let _ = crate::utils::send_response(&mut client.stream, "suc\n");
+    let _ = send_response(&mut client.stream, "suc\n");
 }

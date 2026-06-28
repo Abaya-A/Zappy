@@ -5,7 +5,8 @@
  *  Copyright (c) 2026 Jules Nourdin
  */
 
-use crate::utils::Server;
+use crate::types::network::{send_response, Server};
+use crate::gui_cmd::format_cmd::format_ppo;
 use mio::Token;
 
 pub fn cmd_ppo(token: Token, server: &mut Server, n: u32) {
@@ -13,7 +14,7 @@ pub fn cmd_ppo(token: Token, server: &mut Server, n: u32) {
     for (t, c) in &server.clients {
         if t.0 as u32 == n {
             if let Some(player) = &c.player {
-                found = Some(crate::utils::format_ppo(n, player.x, player.y, player));
+                found = Some(format_ppo(n, player.x, player.y, player));
             }
             break;
         }
@@ -25,5 +26,5 @@ pub fn cmd_ppo(token: Token, server: &mut Server, n: u32) {
     };
 
     let client = server.clients.get_mut(&token).unwrap();
-    let _ = crate::utils::send_response(&mut client.stream, &response);
+    let _ = send_response(&mut client.stream, &response);
 }

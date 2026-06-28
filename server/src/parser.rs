@@ -5,7 +5,7 @@
 ** Copyright (c) 2026 Léo Lacordaire
 */
 
-use crate::utils::ServerParams;
+use crate::types::network::ServerParams;
 use std::env;
 use std::process;
 
