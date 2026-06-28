@@ -41,7 +41,7 @@ fn move_players(server: &mut Server, players: &[Token], x: u32, y: u32, new_x: u
     }
 }
 
-fn notify_players(server: &mut Server, players: &[Token], ejector_x: u32, ejector_y: u32, direction: &Direction)
+fn notify_players(server: &mut Server, players: &[Token], ejector_x: u32, ejector_y: u32)
 {
     let width = server.params.width;
     let height = server.params.height;
@@ -81,7 +81,7 @@ pub fn cmd_eject(token: Token, server: &mut Server)
     server.world.eggs.retain(|egg| !(egg.x == x && egg.y == y));
 
     move_players(server, &others, x, y, new_x, new_y);
-    notify_players(server, &others, x, y, &direction);
+    notify_players(server, &others, x, y);
 
     send_result(token, server, "ok");
     timers::start_action(token, server, 7);
