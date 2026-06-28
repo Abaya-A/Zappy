@@ -161,6 +161,11 @@ fn disconnect_client(token: Token, server: &mut Server)
     restore_team_slot(server, &client);
     remove_player_from_tile(token, server, &client);
 
+    if client.player.is_some() {
+        let msg = format!("pdi #{}\n", token.0);
+        crate::types::network::notify_gui(&mut server.clients, &msg);
+    }
+
     let _ = client.stream.shutdown(Shutdown::Both);
 }
 

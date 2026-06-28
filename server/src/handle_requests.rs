@@ -5,7 +5,7 @@
  *  Copyright (c) 2026 Jules Nourdin
  */
 
-use crate::types::network::{notify_gui, Server};
+use crate::types::network::Server;
 use mio::Token;
 use std::io::Read;
 
@@ -40,28 +40,8 @@ pub fn handle_requests(token: Token, server: &mut Server) -> Option<Vec<String>>
             requests.push(req);
         }
     } else {
-        cleanup_client(token, server);
         return None;
     }
 
     return Some(requests);
-}
-
-fn cleanup_client(token: Token, server: &mut Server) {
-    if let Some(removed_client) = server.clients.remove(&token) {
-        if let Some(team_name) = &removed_client.team_name {
-            if let Some(team) = server.teams.iter_mut().find(|t| t.name == *team_name) {
-                team.available_slots += 1;
-            }
-        }
-        if let Some(player) = &removed_client.player {
-            let px = player.x as usize;
-            let py = player.y as usize;
-            if py < server.world.tiles.len() && px < server.world.tiles[py].len() {
-                server.world.tiles[py][px].players.retain(|&t| t != token);
-            }
-            let death_msg = format!("pdi #{}\n", token.0);
-            notify_gui(&mut server.clients, &death_msg);
-        }
-    }
 }
