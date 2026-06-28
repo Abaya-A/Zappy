@@ -13,6 +13,7 @@ mod parser;
 mod server;
 mod timers;
 mod utils;
+mod handle_requests;
 
 fn main() {
     let params = parser::parse_args();

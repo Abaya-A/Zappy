@@ -6,6 +6,7 @@
  */
 
 use crate::utils::Server;
+use crate::handle_command::{Command, GuiCommand};
 use std::time::{SystemTime, Duration};
 use mio::Token;
 
@@ -26,13 +27,46 @@ pub fn ms_until_deadline(deadline: SystemTime) -> Option<u64> {
 
 pub fn can_act(token: Token, server: &Server) -> bool {
     if let Some(client) = server.clients.get(&token) {
-        if let Some(deadline) = client.action_deadline {
-            SystemTime::now() >= deadline
-        } else {
-            false
+        match client.action_deadline {
+            Some(deadline) => SystemTime::now() >= deadline,
+            None => true,
         }
     } else {
         false
+    }
+}
+
+pub fn process_queued_commands(server: &mut Server) {
+    let now = SystemTime::now();
+    let mut commands_to_process: Vec<(Token, String, bool)> = Vec::new();
+
+    // Push to the queue the commands
+    for (token, client) in server.clients.iter_mut() {
+        if let Some(deadline) = client.action_deadline {
+            if now >= deadline {
+                client.action_deadline = None;
+                if let Some(command_str) = client.command_queue.pop_front() {
+                    let is_gui = client.is_gui;
+                    commands_to_process.push((*token, command_str, is_gui));
+                }
+            }
+        } else if !client.command_queue.is_empty() {
+            if let Some(command_str) = client.command_queue.pop_front() {
+                let is_gui = client.is_gui;
+                commands_to_process.push((*token, command_str, is_gui));
+            }
+        }
+    }
+
+    // Process the commands
+    for (token, command_str, is_gui) in commands_to_process {
+        if is_gui {
+            let cmd = GuiCommand::from_str(&command_str);
+            crate::handle_command::handle_gui_command(token, server, cmd);
+        } else {
+            let cmd = Command::from_str(&command_str);
+            crate::handle_command::handle_command(token, server, cmd);
+        }
     }
 }
 

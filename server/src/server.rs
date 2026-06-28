@@ -70,6 +70,7 @@ pub fn start_server(params: ServerParams) {
                         is_gui: false,
                         action_deadline: None,
                         hunger_check_deadline: timers::get_deadline(100),
+                        command_queue: std::collections::VecDeque::new(),
                     };
 
                     server.clients.insert(token, client);
@@ -97,6 +98,7 @@ pub fn start_server(params: ServerParams) {
             }
         }
         verify_player_hunger(&mut server);
+        timers::process_queued_commands(&mut server);
     }
 }
 
