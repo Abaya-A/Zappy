@@ -154,11 +154,11 @@ make test
 ## Roadmap
 
 - [X] **`Task 1`**: ~~Project management.~~
-- [] **`Task 2`**: CI/CD workflow with a mirror.
-- [X] **`Task 3`**: build Zappy Ai.
-- [X] **`Task 4`**: build Zappy server.
-- [X] **`Task 5`**: build Zappy gui.
-- [] **`Task 6`**: update user and dev doc.
+- [X] **`Task 2`**: ~~CI/CD workflow with a mirror.~~
+- [X] **`Task 3`**: ~~build Zappy Ai.~~
+- [X] **`Task 4`**: ~~build Zappy server.~~
+- [X] **`Task 5`**: ~~build Zappy gui.~~
+- [X] **`Task 6`**: ~~update user and dev doc.~~
 
 ---
 
