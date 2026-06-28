@@ -29,7 +29,7 @@ pub fn can_act(token: Token, server: &Server) -> bool {
         if let Some(deadline) = client.action_deadline {
             SystemTime::now() >= deadline
         } else {
-            false
+            true
         }
     } else {
         false
@@ -47,7 +47,6 @@ pub fn verify_player_hunger(server: &mut Server)
 {
     let now = SystemTime::now();
     let mut dead_players = Vec::new();
-
     for (token, client) in server.clients.iter_mut() {
         if now >= client.hunger_check_deadline {
             if let Some(player) = &mut client.player {
@@ -55,27 +54,25 @@ pub fn verify_player_hunger(server: &mut Server)
                     let elapsed_s = elapsed.as_secs_f64();
                     let game_time = elapsed_s * server.params.frequency as f64;
                     let food_consumed = (game_time / 126.0) as u32;
-
-                    if player.food > food_consumed {
-                        player.food -= food_consumed;
-                    } else {
-                        player.food = 0;
-                        dead_players.push(*token);
+                    if food_consumed > 0 {  // ← ajout ici
+                        if player.food >= food_consumed {
+                            player.food -= food_consumed;
+                        } else {
+                            player.food = 0;
+                            dead_players.push(*token);
+                        }
+                        player.last_food_update = SystemTime::now();
                     }
-
-                    player.last_food_update = SystemTime::now();
                 }
             }
             client.hunger_check_deadline = get_deadline(100);
         }
-
         if let Some(deadline) = client.action_deadline {
             if now >= deadline {
                 client.action_deadline = None;
             }
         }
     }
-
     for dead_token in dead_players {
         if let Some(mut client) = server.clients.remove(&dead_token) {
             let _ = crate::utils::send_response(&mut client.stream, "dead\n");
