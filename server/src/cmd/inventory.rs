@@ -7,12 +7,9 @@
 
 use mio::Token;
 
-use crate::utils::{
-    format_pin,
-    notify_gui,
-    send_result,
-    Server,
-};
+use crate::gui_cmd::format_cmd::format_pin;
+use crate::types::game::Resource;
+use crate::types::network::{notify_gui, send_result, Server};
 
 fn build_inventory_response(token: Token, server: &Server) -> (String, String)
 {
@@ -20,15 +17,16 @@ fn build_inventory_response(token: Token, server: &Server) -> (String, String)
     let player = client.player.as_ref().unwrap();
     let player_number = token.0 as u32;
 
+    let inv = &player.inventory;
     let response = format!(
         "[food {}, linemate {}, deraumere {}, sibur {}, mendiane {}, phiras {}, thystame {}]",
         player.food,
-        player.inventory.get("linemate").unwrap_or(&0),
-        player.inventory.get("deraumere").unwrap_or(&0),
-        player.inventory.get("sibur").unwrap_or(&0),
-        player.inventory.get("mendiane").unwrap_or(&0),
-        player.inventory.get("phiras").unwrap_or(&0),
-        player.inventory.get("thystame").unwrap_or(&0),
+        inv.get(Resource::Linemate),
+        inv.get(Resource::Deraumere),
+        inv.get(Resource::Sibur),
+        inv.get(Resource::Mendiane),
+        inv.get(Resource::Phiras),
+        inv.get(Resource::Thystame),
     );
 
     let pin = format_pin(player_number, player);

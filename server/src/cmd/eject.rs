@@ -7,15 +7,9 @@
 
 use mio::Token;
 
-use crate::utils::{
-    compute_direction,
-    format_ppo,
-    notify_gui,
-    send_response,
-    send_result,
-    Direction,
-    Server,
-};
+use crate::types::game::{compute_direction, Direction};
+use crate::gui_cmd::format_cmd::format_ppo;
+use crate::types::network::{notify_gui, send_response, send_result, Server};
 
 fn get_player_infos(token: Token, server: &Server) -> (u32, u32, Direction)
 {

@@ -7,52 +7,12 @@
 
 use mio::Token;
 
+use crate::debug::debug_queue_drop;
+use crate::debug::debug_queue_received;
+use crate::debug::debug_handshake;
 use crate::handle_requests::handle_requests;
-use crate::utils;
-use crate::utils::Server;
-
-const DEBUG_COMMAND_QUEUE: bool = true;
-
-fn debug_queue_received(token: Token, is_gui: bool, queue_len: usize, request: &str)
-{
-    if !DEBUG_COMMAND_QUEUE {
-        return;
-    }
-
-    println!(
-        "[QUEUE] token={:?} is_gui={} len={} cmd={}",
-        token,
-        is_gui,
-        queue_len,
-        request
-    );
-}
-
-fn debug_queue_drop(token: Token, request: &str)
-{
-    if !DEBUG_COMMAND_QUEUE {
-        return;
-    }
-
-    println!(
-        "[QUEUE DROP] token={:?} cmd={}",
-        token,
-        request
-    );
-}
-
-fn debug_handshake(token: Token, team: &str)
-{
-    if !DEBUG_COMMAND_QUEUE {
-        return;
-    }
-
-    println!(
-        "[HANDSHAKE] token={:?} team={}",
-        token,
-        team
-    );
-}
+use crate::types::network::{notify_gui, send_response, Server};
+use crate::types::game::{Direction, Player, Resources};
 
 fn queue_authenticated_request(token: Token, server: &mut Server, request: String)
 {
@@ -60,6 +20,7 @@ fn queue_authenticated_request(token: Token, server: &mut Server, request: Strin
         return;
     };
 
+    // DEBUG
     debug_queue_received(
         token,
         client.is_gui,
@@ -72,6 +33,7 @@ fn queue_authenticated_request(token: Token, server: &mut Server, request: Strin
         return;
     }
 
+    // DEBUG
     debug_queue_drop(token, &request);
 }
 
@@ -79,7 +41,7 @@ pub fn handle_client(token: Token, server: &mut Server) -> Result<(), std::io::E
 {
     let requests = match handle_requests(token, server) {
         Some(requests) => requests,
-        None => return Ok(()),
+        None => return Err(std::io::Error::new(std::io::ErrorKind::ConnectionReset, "client disconnected")),
     };
 
     for request in requests {
@@ -101,13 +63,14 @@ pub fn handle_client(token: Token, server: &mut Server) -> Result<(), std::io::E
 
 fn handle_handshake(token: Token, server: &mut Server, team: String)
 {
+    // DEBUG
     debug_handshake(token, &team);
 
     let valid_team = server.params.teams_names.contains(&team) || team == "GRAPHIC";
 
     if !valid_team {
         let client = server.clients.get_mut(&token).unwrap();
-        let _ = utils::send_response(&mut client.stream, "ko\n");
+        let _ = send_response(&mut client.stream, "ko\n");
         return;
     }
 
@@ -128,7 +91,7 @@ fn register_gui_client(token: Token, server: &mut Server, team: String)
     client.is_gui = true;
 
     if !existing_players.is_empty() {
-        let _ = utils::send_response(&mut client.stream, &existing_players);
+        let _ = send_response(&mut client.stream, &existing_players);
     }
 }
 
@@ -163,7 +126,7 @@ fn register_ai_client(token: Token, server: &mut Server, team: String)
 {
     if !consume_team_slot(server, &team) {
         let client = server.clients.get_mut(&token).unwrap();
-        let _ = utils::send_response(&mut client.stream, "ko\n");
+        let _ = send_response(&mut client.stream, "ko\n");
         return;
     }
 
@@ -178,18 +141,18 @@ fn register_ai_client(token: Token, server: &mut Server, team: String)
     );
 
     let client = server.clients.get_mut(&token).unwrap();
-    let _ = utils::send_response(&mut client.stream, &response);
+    let _ = send_response(&mut client.stream, &response);
 
     let pnw_message = format!(
         "pnw #{} {} {} {} 1 {}\n",
         token.0,
         spawn_x,
         spawn_y,
-        utils::Direction::N.to_num(),
+        Direction::N.to_num(),
         team
     );
 
-    utils::notify_gui(&mut server.clients, &pnw_message);
+    notify_gui(&mut server.clients, &pnw_message);
 }
 
 fn consume_team_slot(server: &mut Server, team: &str) -> bool
@@ -219,13 +182,13 @@ fn init_ai_client(token: Token, server: &mut Server, team: String) -> (usize, u3
     let client = server.clients.get_mut(&token).unwrap();
 
     client.team_name = Some(team);
-    client.player = Some(utils::Player {
+    client.player = Some(Player {
         x: spawn_x,
         y: spawn_y,
-        direction: utils::Direction::N,
+        direction: Direction::N,
         level: 1,
         food: 10,
-        inventory: std::collections::HashMap::new(),
+        inventory: Resources::default(),
         last_food_update: std::time::SystemTime::now(),
     });
 

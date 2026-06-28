@@ -5,16 +5,17 @@
  *  Copyright (c) 2026 Jules Nourdin
  */
 
-use crate::utils::Server;
+use crate::types::network::{send_response, Server};
+use crate::gui_cmd::format_cmd::format_bct;
 use mio::Token;
 
 pub fn cmd_mct(token: Token, server: &mut Server) {
     let mut res = String::new();
     for y in 0..server.params.height {
         for x in 0..server.params.width {
-            res.push_str(&crate::utils::format_bct(server, x, y));
+            res.push_str(&format_bct(server, x, y));
         }
     }
     let client = server.clients.get_mut(&token).unwrap();
-    let _ = crate::utils::send_response(&mut client.stream, &res);
+    let _ = send_response(&mut client.stream, &res);
 }

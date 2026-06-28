@@ -5,7 +5,7 @@
  *  Copyright (c) 2026 Jules Nourdin
  */
 
-use crate::utils::Server;
+use crate::types::network::Server;
 use mio::Token;
 
 #[derive(Debug)]

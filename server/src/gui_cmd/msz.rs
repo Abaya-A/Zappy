@@ -5,11 +5,11 @@
  *  Copyright (c) 2026 Jules Nourdin
  */
 
-use crate::utils::Server;
+use crate::types::network::{send_response, Server};
 use mio::Token;
 
 pub fn cmd_msz(token: Token, server: &mut Server) {
     let client = server.clients.get_mut(&token).unwrap();
     let res = format!("msz {} {}\n", server.params.width, server.params.height);
-    let _ = crate::utils::send_response(&mut client.stream, &res);
+    let _ = send_response(&mut client.stream, &res);
 }

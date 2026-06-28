@@ -7,17 +7,13 @@
 
 use mio::Token;
 
-use crate::utils::{
-    notify_gui,
-    resource_to_index,
-    send_result,
-    Server,
-};
+use crate::types::game::Resource;
+use crate::types::network::{notify_gui, send_result, Server};
+use crate::gui_cmd::format_cmd::format_bct;
 
-fn take_resource(server: &mut Server, x: usize, y: usize, resource: &str) -> bool
+fn take_resource(server: &mut Server, x: usize, y: usize, r: Resource) -> bool
 {
-    let tile = &mut server.world.tiles[y][x];
-    let count = tile.resources.entry(resource.to_string()).or_insert(0);
+    let count = server.world.tiles[y][x].resources.get_mut(r);
 
     if *count == 0 {
         return false;
@@ -27,17 +23,17 @@ fn take_resource(server: &mut Server, x: usize, y: usize, resource: &str) -> boo
     true
 }
 
-fn add_to_inventory(server: &mut Server, token: Token, resource: &str)
+fn add_to_inventory(server: &mut Server, token: Token, r: Resource)
 {
     let client = server.clients.get_mut(&token).unwrap();
     let player = client.player.as_mut().unwrap();
 
-    if resource == "food" {
+    if r == Resource::Food {
         player.food += 1;
         return;
     }
 
-    *player.inventory.entry(resource.to_string()).or_insert(0) += 1;
+    player.inventory.add(r, 1);
 }
 
 fn get_player_position(token: Token, server: &Server) -> (usize, usize)
@@ -48,25 +44,30 @@ fn get_player_position(token: Token, server: &Server) -> (usize, usize)
     (player.x as usize, player.y as usize)
 }
 
-fn notify_take_to_gui(token: Token, server: &mut Server, resource: &str)
+fn notify_take_to_gui(token: Token, server: &mut Server, r: Resource)
 {
-    let player_number = token.0 as u32;
-    let resource_index = resource_to_index(resource);
-    let message = format!("pgt #{} {}\n", player_number, resource_index);
+    let message = format!("pgt #{} {}\n", token.0, r.to_index());
 
     notify_gui(&mut server.clients, &message);
 }
 
 pub fn cmd_take(token: Token, server: &mut Server, resource: String)
 {
+    let Some(r) = Resource::from_str(&resource) else {
+        send_result(token, server, "ko");
+        return;
+    };
+
     let (x, y) = get_player_position(token, server);
 
-    if !take_resource(server, x, y, &resource) {
+    if !take_resource(server, x, y, r) {
         send_result(token, server, "ko");
         return;
     }
 
-    add_to_inventory(server, token, &resource);
+    add_to_inventory(server, token, r);
     send_result(token, server, "ok");
-    notify_take_to_gui(token, server, &resource);
+    notify_take_to_gui(token, server, r);
+    let bct = format_bct(server, x as u32, y as u32);
+    notify_gui(&mut server.clients, &bct);
 }

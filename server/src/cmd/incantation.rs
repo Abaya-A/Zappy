@@ -7,44 +7,39 @@
 
 use mio::Token;
 
-use crate::utils::{
-    notify_gui,
-    send_result,
-    Player,
-    Server,
-};
-
-use std::collections::HashMap;
+use crate::types::game::{Player, Resource, Resources, ALL_RESOURCES};
+use crate::types::network::{notify_gui, send_result, Server};
 
 struct IncantationRequirements {
     players: usize,
-    resources: HashMap<String, u32>,
+    resources: Resources,
 }
 
 fn get_requirements(level: u32) -> Option<IncantationRequirements>
 {
-    let mut resources = HashMap::new();
+    use Resource::*;
 
-    let (players, requirements) = match level {
-        1 => (1, vec![("linemate", 1)]),
-        2 => (2, vec![("linemate", 1), ("deraumere", 1), ("sibur", 1)]),
-        3 => (2, vec![("linemate", 2), ("sibur", 1), ("phiras", 2)]),
-        4 => (4, vec![("linemate", 1), ("deraumere", 1), ("sibur", 2), ("phiras", 1)]),
-        5 => (4, vec![("linemate", 1), ("deraumere", 2), ("sibur", 1), ("mendiane", 3)]),
-        6 => (6, vec![("linemate", 1), ("deraumere", 2), ("sibur", 3), ("phiras", 1)]),
-        7 => (6, vec![
-            ("linemate", 2),
-            ("deraumere", 2),
-            ("sibur", 2),
-            ("mendiane", 2),
-            ("phiras", 2),
-            ("thystame", 1),
+    let (players, reqs): (usize, &[(Resource, u32)]) = match level {
+        1 => (1, &[(Linemate, 1)]),
+        2 => (2, &[(Linemate, 1), (Deraumere, 1), (Sibur, 1)]),
+        3 => (2, &[(Linemate, 2), (Sibur, 1), (Phiras, 2)]),
+        4 => (4, &[(Linemate, 1), (Deraumere, 1), (Sibur, 2), (Phiras, 1)]),
+        5 => (4, &[(Linemate, 1), (Deraumere, 2), (Sibur, 1), (Mendiane, 3)]),
+        6 => (6, &[(Linemate, 1), (Deraumere, 2), (Sibur, 3), (Phiras, 1)]),
+        7 => (6, &[
+            (Linemate, 2),
+            (Deraumere, 2),
+            (Sibur, 2),
+            (Mendiane, 2),
+            (Phiras, 2),
+            (Thystame, 1),
         ]),
         _ => return None,
     };
 
-    for (resource, count) in requirements {
-        resources.insert(resource.to_string(), count);
+    let mut resources = Resources::default();
+    for &(r, n) in reqs {
+        resources.add(r, n);
     }
 
     Some(IncantationRequirements { players, resources })
@@ -90,8 +85,8 @@ fn has_required_resources(
 ) -> bool {
     let tile = &server.world.tiles[player.y as usize][player.x as usize];
 
-    requirements.resources.iter().all(|(resource, required_count)| {
-        tile.resources.get(resource).copied().unwrap_or(0) >= *required_count
+    ALL_RESOURCES.iter().all(|&r| {
+        tile.resources.get(r) >= requirements.resources.get(r)
     })
 }
 
@@ -113,9 +108,11 @@ fn remove_required_resources(server: &mut Server, player: &Player)
 
     let tile = &mut server.world.tiles[player.y as usize][player.x as usize];
 
-    for (resource, required_count) in requirements.resources {
-        let count = tile.resources.entry(resource).or_insert(0);
-        *count = count.saturating_sub(required_count);
+    for r in ALL_RESOURCES {
+        let req = requirements.resources.get(r);
+        if req > 0 {
+            tile.resources.sub_saturating(r, req);
+        }
     }
 }
 

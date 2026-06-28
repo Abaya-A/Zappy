@@ -6,7 +6,7 @@
  */
 
 use mio::Token;
-use crate::utils::{Server, send_response};
+use crate::types::network::{send_response, Server};
 
 pub fn cmd_connect_nbr(token: Token, server: &mut Server)
 {

@@ -7,12 +7,8 @@
 
 use mio::Token;
 
-use crate::utils::{
-    notify_gui,
-    send_result,
-    Egg,
-    Server,
-};
+use crate::types::game::Egg;
+use crate::types::network::{notify_gui, send_result, Server};
 
 fn get_fork_context(token: Token, server: &Server) -> (u32, u32, String)
 {
