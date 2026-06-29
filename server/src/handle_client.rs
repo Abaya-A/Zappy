@@ -41,7 +41,7 @@ pub fn handle_client(token: Token, server: &mut Server) -> Result<(), std::io::E
 {
     let requests = match handle_requests(token, server) {
         Some(requests) => requests,
-        None => return Ok(()),
+        None => return Err(std::io::Error::new(std::io::ErrorKind::ConnectionReset, "client disconnected")),
     };
 
     for request in requests {

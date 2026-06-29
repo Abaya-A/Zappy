@@ -231,7 +231,10 @@ pub fn verify_player_hunger(server: &mut Server)
                         dead_players.push(*token);
                     }
 
-                    player.last_food_update = SystemTime::now();
+                    let consumed_duration = Duration::from_secs_f64(
+                        food_consumed as f64 * 126.0 / server.params.frequency as f64
+                    );
+                    player.last_food_update = player.last_food_update + consumed_duration;
                 }
             }
         }
