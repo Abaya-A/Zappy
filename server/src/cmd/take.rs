@@ -9,6 +9,7 @@ use mio::Token;
 
 use crate::types::game::Resource;
 use crate::types::network::{notify_gui, send_result, Server};
+use crate::gui_cmd::format_cmd::format_bct;
 
 fn take_resource(server: &mut Server, x: usize, y: usize, r: Resource) -> bool
 {
@@ -67,4 +68,6 @@ pub fn cmd_take(token: Token, server: &mut Server, resource: String)
     add_to_inventory(server, token, r);
     send_result(token, server, "ok");
     notify_take_to_gui(token, server, r);
+    let bct = format_bct(server, x as u32, y as u32);
+    notify_gui(&mut server.clients, &bct);
 }
