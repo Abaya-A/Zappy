@@ -5,8 +5,9 @@
  *  Copyright (c) 2026 Jules Nourdin
  */
 
-use crate::utils::Server;
-use crate::utils::notify_gui;
+use crate::debug::debug_execute_command;
+use crate::debug::debug_consumed_food;
+use crate::types::network::Server;
 use crate::handle_command::{Command, GuiCommand};
 use std::time::{SystemTime, Duration};
 use mio::Token;
@@ -56,24 +57,9 @@ fn command_duration_units(command: &Command) -> u32
     }
 }
 
-const DEBUG_COMMAND_EXECUTION: bool = true;
-
-fn debug_execute_command(token: Token, is_gui: bool, command: &str)
-{
-    if !DEBUG_COMMAND_EXECUTION {
-        return;
-    }
-
-    println!(
-        "[EXEC] token={:?} is_gui={} cmd={}",
-        token,
-        is_gui,
-        command
-    );
-}
-
 fn execute_command(token: Token, server: &mut Server, command_str: String, is_gui: bool)
 {
+    // DEBUG
     debug_execute_command(token, is_gui, &command_str);
 
     if is_gui {
@@ -196,7 +182,7 @@ fn handle_player_death(server: &mut Server, dead_token: Token)
 
     // notif ia
     println!("[DEATH] send dead to {:?}", dead_token);
-    let _ = crate::utils::send_response(&mut client.stream, "dead\n");
+    let _ = crate::types::network::send_response(&mut client.stream, "dead\n");
     let _ = client.stream.shutdown(std::net::Shutdown::Both);
 
     // clean map gui + notif gui
@@ -209,7 +195,7 @@ fn handle_player_death(server: &mut Server, dead_token: Token)
         }
 
         let msg = format!("pdi #{}\n", dead_token.0);
-        crate::utils::notify_gui(&mut server.clients, &msg);
+        crate::types::network::notify_gui(&mut server.clients, &msg);
     }
 
     // del slot ekip
@@ -223,6 +209,7 @@ pub fn verify_player_hunger(server: &mut Server)
 {
     let now = SystemTime::now();
     let mut dead_players = Vec::new();
+    let mut any_food_consumed = false;
 
     for (token, client) in server.clients.iter_mut() {
         if now < client.hunger_check_deadline {
@@ -236,6 +223,7 @@ pub fn verify_player_hunger(server: &mut Server)
                 let food_consumed = (game_time / 126.0) as u32;
 
                 if food_consumed > 0 {
+                    any_food_consumed = true;
                     if player.food > food_consumed {
                         player.food -= food_consumed;
                     } else {
@@ -250,6 +238,9 @@ pub fn verify_player_hunger(server: &mut Server)
 
         client.hunger_check_deadline = get_deadline(100);
     }
+
+    // DEBUG
+    debug_consumed_food(any_food_consumed, server);
 
     for dead_token in dead_players {
         handle_player_death(server, dead_token);

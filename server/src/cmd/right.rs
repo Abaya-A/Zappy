@@ -7,14 +7,9 @@
 
 use mio::Token;
 
-use crate::utils::{
-    format_ppo,
-    notify_gui,
-    send_result,
-    Direction,
-    Player,
-    Server,
-};
+use crate::types::game::{Direction, Player};
+use crate::gui_cmd::format_cmd::format_ppo;
+use crate::types::network::{notify_gui, send_result, Server};
 
 fn go_right(player: &mut Player)
 {

@@ -7,13 +7,14 @@
 
 mod cmd;
 mod gui_cmd;
+mod types;
 mod handle_client;
 mod handle_command;
 mod parser;
 mod server;
 mod timers;
-mod utils;
 mod handle_requests;
+mod debug;
 
 fn main() {
     let params = parser::parse_args();

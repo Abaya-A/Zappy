@@ -5,8 +5,7 @@
  *  Copyright (c) 2026 Jules Nourdin
  */
 
-use crate::utils;
-use crate::utils::Server;
+use crate::types::network::{notify_gui, Server};
 use mio::Token;
 use std::io::Read;
 
@@ -62,7 +61,7 @@ fn cleanup_client(token: Token, server: &mut Server) {
                 server.world.tiles[py][px].players.retain(|&t| t != token);
             }
             let death_msg = format!("pdi #{}\n", token.0);
-            utils::notify_gui(&mut server.clients, &death_msg);
+            notify_gui(&mut server.clients, &death_msg);
         }
     }
 }

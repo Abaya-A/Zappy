@@ -7,41 +7,13 @@
 
 use mio::Token;
 
-use crate::utils::{send_result, Direction, Server};
+use crate::debug::debug_look_coordinates;
+use crate::debug::debug_look_response;
+use crate::types::game::{Direction, ALL_RESOURCES};
+use crate::types::network::{send_result, Server};
 
 type Position = (u32, u32);
 type Vector = (i32, i32);
-
-const DEBUG_LOOK: bool = true;
-
-fn debug_look_coordinates(token: Token, vision: &[Vec<Position>])
-{
-    if !DEBUG_LOOK {
-        return;
-    }
-
-    let mut index = 0;
-
-    print!("[LOOK COORDS] token={:?}", token);
-
-    for line in vision {
-        for &(x, y) in line {
-            print!(" {}=({}, {})", index, x, y);
-            index += 1;
-        }
-    }
-
-    println!();
-}
-
-fn debug_look_response(token: Token, response: &str)
-{
-    if !DEBUG_LOOK {
-        return;
-    }
-
-    println!("[LOOK RESPONSE] token={:?} {}", token, response);
-}
 
 fn get_player(token: Token, server: &Server) -> (u32, u32, Direction, u32)
 {
@@ -153,13 +125,13 @@ fn append_resources(items: &mut String, server: &Server, x: u32, y: u32)
 {
     let tile = &server.world.tiles[y as usize][x as usize];
 
-    for (resource, count) in &tile.resources {
-        for _ in 0..*count {
+    for r in ALL_RESOURCES {
+        for _ in 0..tile.resources.get(r) {
             if !items.is_empty() {
                 items.push(' ');
             }
 
-            items.push_str(resource);
+            items.push_str(r.name());
         }
     }
 }
@@ -200,6 +172,7 @@ pub fn cmd_look(token: Token, server: &mut Server)
     let vision = build_look(token, server);
     let response = format_look_response(server, &vision);
 
+    // DEBUG
     debug_look_coordinates(token, &vision);
     debug_look_response(token, &response);
 

@@ -7,13 +7,8 @@
 
 use mio::Token;
 
-use crate::utils::{
-    compute_direction,
-    notify_gui,
-    send_response,
-    send_result,
-    Server,
-};
+use crate::types::game::compute_direction;
+use crate::types::network::{notify_gui, send_response, send_result, Server};
 
 fn broadcast_to_others(token: Token, server: &mut Server, message: &str, emitter_x: u32, emitter_y: u32)
 {
